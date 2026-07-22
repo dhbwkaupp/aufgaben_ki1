@@ -1,0 +1,309 @@
+\section{SVM}
+\setcounter{aufgabe}{0}
+
+% ============================================================
+% AUFGABE 1: Entscheidungsfunktion, Klassifikation, Abstand
+% ============================================================
+\aufgabe{
+Gegeben sei im $\mathbb{R}^2$ eine Trennebene mit Normalenvektor
+$\mathbf{w} = \begin{pmatrix} 3 \\ 4 \end{pmatrix}$ und $w_0 = -10$. Die
+Entscheidungsfunktion lautet $g(\mathbf{x}) = w_0 + \mathbf{w}\cdot\mathbf{x}$
+mit
+\[
+  \mathbf{w}\cdot\mathbf{x} + w_0 > 0 \Rightarrow \text{Klasse A},
+  \qquad
+  \mathbf{w}\cdot\mathbf{x} + w_0 < 0 \Rightarrow \text{Klasse B}.
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Klassifizieren Sie die Punkte
+        $\mathbf{x}_1 = \begin{pmatrix} 2 \\ 2 \end{pmatrix}$ und
+        $\mathbf{x}_2 = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$.
+  \item Berechnen Sie den geometrischen Abstand $r = \dfrac{g(\mathbf{x_1})}{\lVert\mathbf{w}\rVert}$
+        von $\mathbf{x}_1$ zur Trennebene.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Für $\mathbf{x}_1$:
+  \[
+    g(\mathbf{x}_1) = 3\cdot 2 + 4\cdot 2 - 10 = 6 + 8 - 10 = 4 > 0
+    \;\Rightarrow\; \textbf{Klasse A}.
+  \]
+  Für $\mathbf{x}_2$:
+  \[
+    g(\mathbf{x}_2) = 3\cdot 1 + 4\cdot 1 - 10 = 3 + 4 - 10 = -3 < 0
+    \;\Rightarrow\; \textbf{Klasse B}.
+  \]
+
+  \item Mit $\lVert\mathbf{w}\rVert = \sqrt{3^2 + 4^2} = \sqrt{25} = 5$:
+  \[
+    r = \frac{g(\mathbf{x}_1)}{\lVert\mathbf{w}\rVert} = \frac{4}{5} = 0{,}8.
+  \]
+\end{enumerate}
+}
+
+
+% ============================================================
+% AUFGABE 2: Margin und Skalierung
+% ============================================================
+\aufgabe{
+Eine SVM habe den Normalenvektor
+$\mathbf{w} = \begin{pmatrix} 1 \\ -2 \\ 2 \end{pmatrix}$ und $w_0 = 3$.
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie den Margin $\rho = \dfrac{1}{\lVert\mathbf{w}\rVert}$.
+  \item Ein Support Vector $\mathbf{x}_s$ der Klasse $y = +1$ erfüllt die
+        Bedingung mit Gleichheit, also
+        $y\cdot(\mathbf{w}\cdot\mathbf{x}_s + w_0) = 1$. Prüfen Sie, ob
+        $\mathbf{x}_s = \begin{pmatrix} 0 \\ 0 \\ -1 \end{pmatrix}$ ein
+        solcher Support Vector ist.
+  \item Erläutern Sie, warum ein Verdoppeln von $\mathbf{w}$ und $w_0$
+        dieselbe Trennebene, aber einen anderen Wert von $\lVert\mathbf{w}\rVert$
+        liefert.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item $\lVert\mathbf{w}\rVert = \sqrt{1^2 + (-2)^2 + 2^2} = \sqrt{9} = 3$, also
+  \[
+    \rho = \frac{1}{\lVert\mathbf{w}\rVert} = \frac{1}{3} \approx 0{,}333.
+  \]
+
+  \item Einsetzen:
+  \[
+    \mathbf{w}\cdot\mathbf{x}_s + w_0 = 1\cdot 0 + (-2)\cdot 0 + 2\cdot(-1) + 3 = 1.
+  \]
+  Mit $y = +1$ gilt $y\cdot(\mathbf{w}\cdot\mathbf{x}_s + w_0) = 1$. Die
+  Bedingung ist mit \textbf{Gleichheit} erfüllt, $\mathbf{x}_s$ ist ein
+  \textbf{Support Vector}.
+
+  \item Ein Vielfaches $\alpha\mathbf{w}$, $\alpha w_0$ liefert dieselbe Menge
+  $\{\mathbf{x} : \alpha\mathbf{w}\cdot\mathbf{x} + \alpha w_0 = 0\}$, also
+  \textbf{dieselbe Ebene}, da die Nullstellenmenge invariant unter Skalierung
+  ist. Der Betrag $\lVert\alpha\mathbf{w}\rVert = |\alpha|\,\lVert\mathbf{w}\rVert$
+  ändert sich jedoch. Deshalb wird die Skalierung über
+  $\rho\cdot\lVert\mathbf{w}\rVert = 1$ fixiert.
+\end{enumerate}
+}
+
+
+% ============================================================
+% AUFGABE 3: Optimales w aus Lambda, duale Klassifikation
+% ============================================================
+\aufgabe{
+Ein linear trennbares Problem im $\mathbb{R}^2$ habe drei Support Vectors:
+\begin{center}
+{\scriptsize
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\rowcolors{2}{SecondaryColor!12}{white}
+\begin{tabular}{c c c c}
+\rowcolor{PrimaryColor}
+\textcolor{white}{\textbf{$i$}} &
+\textcolor{white}{\textbf{$\mathbf{x}_i$}} &
+\textcolor{white}{\textbf{$y_i$}} &
+\textcolor{white}{\textbf{$\lambda_i$}}\\
+1 & $(2, 0)^{\mathsf{T}}$ & $+1$ & $1$\\
+2 & $(0, 2)^{\mathsf{T}}$ & $+1$ & $1$\\
+3 & $(0, 0)^{\mathsf{T}}$ & $-1$ & $2$\\
+\end{tabular}}
+\end{center}
+
+\begin{enumerate}[label=\alph*)]
+  \item Prüfen Sie die duale Nebenbedingung $\sum_i \lambda_i y_i = 0$.
+  \item Berechnen Sie $\mathbf{w}^{*} = \sum_i \lambda_i y_i \mathbf{x}_i$.
+  \item Klassifizieren Sie das neue Sample
+        $\mathbf{z} = \begin{pmatrix} 3 \\ 3 \end{pmatrix}$ über das Vorzeichen
+        von $g(\mathbf{z}) = \mathbf{w}^{*}\cdot\mathbf{z} + w_0^{*}$, wobei
+        $w_0^{*} = -1$ gegeben ist.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Duale Nebenbedingung:
+  \[
+    \sum_i \lambda_i y_i = 1\cdot(+1) + 1\cdot(+1) + 2\cdot(-1) = 1 + 1 - 2 = 0. \checkmark
+  \]
+
+  \item Optimales $\mathbf{w}^{*}$:
+  \[
+    \mathbf{w}^{*} = 1\cdot(+1)\begin{pmatrix} 2 \\ 0 \end{pmatrix}
+                   + 1\cdot(+1)\begin{pmatrix} 0 \\ 2 \end{pmatrix}
+                   + 2\cdot(-1)\begin{pmatrix} 0 \\ 0 \end{pmatrix}
+                   = \begin{pmatrix} 2 \\ 2 \end{pmatrix}.
+  \]
+
+  \item Entscheidungsfunktion:
+  \[
+    g(\mathbf{z}) = \mathbf{w}^{*}\cdot\mathbf{z} + w_0^{*}
+                  = 2\cdot 3 + 2\cdot 3 - 1 = 11 > 0
+    \;\Rightarrow\; \textbf{Klasse A} \;(y = +1).
+  \]
+\end{enumerate}
+}
+
+
+% ============================================================
+% AUFGABE 4: RBF-Kernel und Schlupfvariablen
+% ============================================================
+\aufgabe{
+\begin{enumerate}[label=\alph*)]
+  \item Der RBF-Kernel ist definiert durch
+        $K(\mathbf{x}, \mathbf{y}) = e^{-\gamma\,\lVert\mathbf{x}-\mathbf{y}\rVert^2}$.
+        Berechnen Sie mit $\gamma = 0{,}5$ die Ähnlichkeit
+        $K(\mathbf{x}, \mathbf{y})$ für
+        $\mathbf{x} = \begin{pmatrix} 1 \\ 2 \end{pmatrix}$,
+        $\mathbf{y} = \begin{pmatrix} 3 \\ 2 \end{pmatrix}$.
+  \item Geben Sie $K(\mathbf{x}, \mathbf{x})$ an und begründen Sie den Wert.
+  \item Ein Punkt mit Label $y_i = +1$ erfüllt
+        $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) = -0{,}3$. Bestimmen Sie die
+        Schlupfvariable $\xi_i$ aus $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) \geq 1 - \xi_i$
+        (mit Gleichheit) und entscheiden Sie, ob der Punkt korrekt klassifiziert
+        ist.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Quadratischer Abstand:
+  \[
+    \lVert\mathbf{x}-\mathbf{y}\rVert^2 = (1-3)^2 + (2-2)^2 = 4 + 0 = 4.
+  \]
+  \[
+    K(\mathbf{x}, \mathbf{y}) = e^{-0{,}5\cdot 4} = e^{-2} \approx 0{,}135.
+  \]
+
+  \item Am selben Punkt ist der Abstand null:
+  \[
+    K(\mathbf{x}, \mathbf{x}) = e^{-\gamma\cdot 0} = e^{0} = 1.
+  \]
+  Der Kernel misst Ähnlichkeit; identische Punkte haben maximale Ähnlichkeit $1$.
+
+  \item Aus $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) = 1 - \xi_i$ folgt
+  \[
+    \xi_i = 1 - \bigl(-0{,}3\bigr) = 1{,}3.
+  \]
+  Wegen $\xi_i \geq 1$ liegt eine \textbf{Fehlklassifikation} vor.
+\end{enumerate}
+}
+
+% ============================================================
+% AUFGABE 5: Klassifikation mit polynomialem Kernel
+% ============================================================
+\aufgabe{
+Eine SVM mit \textbf{polynomialem Kernel}
+$K(\mathbf{x}_i, \mathbf{x}_j) = (\mathbf{x}_i\cdot\mathbf{x}_j + c)^d$
+und $c = 1$, $d = 2$ klassifiziert ein neues Sample $\mathbf{z}$ über
+\[
+  g(\mathbf{z}) = \sum_{i} \lambda_i\, y_i\, K(\mathbf{x}_i, \mathbf{z}) + w_0^{*}.
+\]
+Gegeben sind die Support Vectors mit $w_0^{*} = -1$:
+\begin{center}
+{\scriptsize
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\rowcolors{2}{SecondaryColor!12}{white}
+\begin{tabular}{c c c c}
+\rowcolor{PrimaryColor}
+\textcolor{white}{\textbf{$i$}} &
+\textcolor{white}{\textbf{$\mathbf{x}_i$}} &
+\textcolor{white}{\textbf{$y_i$}} &
+\textcolor{white}{\textbf{$\lambda_i$}}\\
+1 & $(1, 0)^{\mathsf{T}}$ & $+1$ & $0{,}5$\\
+2 & $(0, 1)^{\mathsf{T}}$ & $+1$ & $0{,}5$\\
+3 & $(1, 1)^{\mathsf{T}}$ & $-1$ & $1$\\
+\end{tabular}}
+\end{center}
+
+Klassifizieren Sie das Sample $\mathbf{z} = \begin{pmatrix} 2 \\ 0 \end{pmatrix}$.
+}
+
+\loesung{
+\textbf{Kernelwerte} $K(\mathbf{x}_i, \mathbf{z}) = (\mathbf{x}_i\cdot\mathbf{z} + 1)^2$:
+\[
+  \mathbf{x}_1\cdot\mathbf{z} = 1\cdot 2 + 0\cdot 0 = 2,
+  \qquad K(\mathbf{x}_1, \mathbf{z}) = (2+1)^2 = 9.
+\]
+\[
+  \mathbf{x}_2\cdot\mathbf{z} = 0\cdot 2 + 1\cdot 0 = 0,
+  \qquad K(\mathbf{x}_2, \mathbf{z}) = (0+1)^2 = 1.
+\]
+\[
+  \mathbf{x}_3\cdot\mathbf{z} = 1\cdot 2 + 1\cdot 0 = 2,
+  \qquad K(\mathbf{x}_3, \mathbf{z}) = (2+1)^2 = 9.
+\]
+
+\textbf{Entscheidungsfunktion:}
+\[
+  g(\mathbf{z}) = 0{,}5\cdot(+1)\cdot 9 + 0{,}5\cdot(+1)\cdot 1 + 1\cdot(-1)\cdot 9 - 1
+\]
+\[
+  g(\mathbf{z}) = 4{,}5 + 0{,}5 - 9 - 1 = -5 < 0
+  \;\Rightarrow\; \textbf{Klasse B} \;(y = -1).
+\]
+}
+
+
+% ============================================================
+% AUFGABE 6: Klassifikation mit RBF-Kernel
+% ============================================================
+\aufgabe{
+Eine SVM mit \textbf{RBF-Kernel}
+$K(\mathbf{x}, \mathbf{y}) = e^{-\gamma\,\lVert\mathbf{x}-\mathbf{y}\rVert^2}$
+und $\gamma = 0{,}5$ klassifiziert ein neues Sample $\mathbf{z}$ über
+\[
+  g(\mathbf{z}) = \sum_{i} \lambda_i\, y_i\, K(\mathbf{x}_i, \mathbf{z}) + w_0^{*}.
+\]
+Gegeben sind die Support Vectors mit $w_0^{*} = 0$:
+\begin{center}
+{\scriptsize
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\rowcolors{2}{SecondaryColor!12}{white}
+\begin{tabular}{c c c c}
+\rowcolor{PrimaryColor}
+\textcolor{white}{\textbf{$i$}} &
+\textcolor{white}{\textbf{$\mathbf{x}_i$}} &
+\textcolor{white}{\textbf{$y_i$}} &
+\textcolor{white}{\textbf{$\lambda_i$}}\\
+1 & $(0, 0)^{\mathsf{T}}$ & $+1$ & $1$\\
+2 & $(2, 2)^{\mathsf{T}}$ & $-1$ & $1$\\
+\end{tabular}}
+\end{center}
+
+Klassifizieren Sie das Sample $\mathbf{z} = \begin{pmatrix} 1 \\ 0 \end{pmatrix}$.
+}
+
+\loesung{
+\textbf{Quadratische Abstände} $\lVert\mathbf{x}_i - \mathbf{z}\rVert^2$:
+\[
+  \lVert\mathbf{x}_1 - \mathbf{z}\rVert^2 = (0-1)^2 + (0-0)^2 = 1,
+\]
+\[
+  \lVert\mathbf{x}_2 - \mathbf{z}\rVert^2 = (2-1)^2 + (2-0)^2 = 1 + 4 = 5.
+\]
+
+\textbf{Kernelwerte} $K(\mathbf{x}_i, \mathbf{z}) = e^{-0{,}5\,\lVert\mathbf{x}_i - \mathbf{z}\rVert^2}$:
+\[
+  K(\mathbf{x}_1, \mathbf{z}) = e^{-0{,}5\cdot 1} = e^{-0{,}5} \approx 0{,}607,
+\]
+\[
+  K(\mathbf{x}_2, \mathbf{z}) = e^{-0{,}5\cdot 5} = e^{-2{,}5} \approx 0{,}082.
+\]
+
+\textbf{Entscheidungsfunktion:}
+\[
+  g(\mathbf{z}) = 1\cdot(+1)\cdot 0{,}607 + 1\cdot(-1)\cdot 0{,}082 + 0
+\]
+\[
+  g(\mathbf{z}) = 0{,}607 - 0{,}082 = 0{,}525 > 0
+  \;\Rightarrow\; \textbf{Klasse A} \;(y = +1).
+\]
+
+\textbf{Deutung:} $\mathbf{z}$ liegt näher am Support Vector der Klasse A
+(Abstand$^2 = 1$) als an dem der Klasse B (Abstand$^2 = 5$). Da der RBF-Kernel
+Nähe als Ähnlichkeit misst, überwiegt der Beitrag der Klasse A.
+}
