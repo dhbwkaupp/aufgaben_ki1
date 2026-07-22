@@ -1,0 +1,196 @@
+\section{Modellauswahl}
+\setcounter{aufgabe}{0}
+
+\aufgabe{
+Gegeben seien die Testdatenpunkte im Format $((x_1,\dots,x_n),\,y)$ mit
+Eingangsdimension $n=1$:
+\[
+((1),\,2),\quad ((2),\,5),\quad ((3),\,6),\quad ((4),\,9).
+\]
+Weiter sei die Regressionsfunktion
+\[
+f(\mathbf{x}) = u_0 + \mathbf{b}\cdot\mathbf{x}, \qquad u_0 = 1,\ \mathbf{b} = (2)
+\]
+gegeben, also $f(x) = 1 + 2x$.
+
+Bestimmen Sie:
+\begin{enumerate}[label=\alph*)]
+  \item die Summe der quadrierten Abstände,
+  \item den $R^2$-Score.
+\end{enumerate}
+}
+
+\loesung{
+Es bezeichne $m$ die Anzahl der Datenpunkte und $\hat{y}_i := f(\mathbf{x}_i)$ die
+Vorhersage. Gemäß Definition des Bestimmtheitsmaßes gilt
+\[
+E_{\text{modell}} = \sum_{i=1}^{m}\bigl(y_i - \hat{y}_i\bigr)^2,
+\qquad
+R^2 = 1 - \frac{E_{\text{modell}}}{E_{\text{vergleich}}},
+\qquad
+E_{\text{vergleich}} = \sum_{i=1}^{m}\bigl(y_i - \bar{y}\bigr)^2,
+\qquad
+\bar{y} = \frac{1}{m}\sum_{i=1}^{m} y_i.
+\]
+$E_{\text{modell}}$ ist der Fehler des zu bewertenden Modells, $E_{\text{vergleich}}$
+der Fehler des Vergleichsmodells $\hat{y}_i = \bar{y}$.
+
+\medskip
+Vorhersagen und Residuen ($m=4$):
+\begin{itemize}
+  \item $\hat{y}_1 = f(1) = 3$, \quad $y_1=2$, \quad $(y_1-\hat{y}_1)^2 = 1$
+  \item $\hat{y}_2 = f(2) = 5$, \quad $y_2=5$, \quad $(y_2-\hat{y}_2)^2 = 0$
+  \item $\hat{y}_3 = f(3) = 7$, \quad $y_3=6$, \quad $(y_3-\hat{y}_3)^2 = 1$
+  \item $\hat{y}_4 = f(4) = 9$, \quad $y_4=9$, \quad $(y_4-\hat{y}_4)^2 = 0$
+\end{itemize}
+
+\begin{enumerate}[label=\alph*)]
+  \item Summe der quadrierten Abstände:
+  \[
+  E_{\text{modell}} = 1+0+1+0 = 2.
+  \]
+
+  \item Mittelwert: $\bar{y} = \dfrac{2+5+6+9}{4} = \dfrac{22}{4} = 5{,}5$.
+
+  Fehler des Vergleichsmodells:
+  \[
+  E_{\text{vergleich}}
+  = (2-5{,}5)^2+(5-5{,}5)^2+(6-5{,}5)^2+(9-5{,}5)^2
+  = 12{,}25+0{,}25+0{,}25+12{,}25 = 25.
+  \]
+  \[
+  R^2 = 1 - \frac{2}{25} = \frac{23}{25} = 0{,}92.
+  \]
+\end{enumerate}
+}
+
+
+\aufgabe{
+Gegeben seien die Testdatenpunkte im Format $((x_1,x_2,x_3),\,y)$ mit
+Eingangsdimension $n=3$:
+\[
+((5,1,0),\,7),\quad ((1,4,2),\,8),\quad ((0,2,2),\,2),\quad ((4,0,2),\,3).
+\]
+Weiter sei die Regressionsfunktion
+\[
+f(\mathbf{x}) = u_0 + \mathbf{b}\cdot\mathbf{x}, \qquad
+u_0 = 1,\ \mathbf{b} = (1,2,-1)
+\]
+gegeben, also $f(\mathbf{x}) = 1 + x_1 + 2x_2 - x_3$.
+
+Bestimmen Sie:
+\begin{enumerate}[label=\alph*)]
+  \item die Summe der quadrierten Abstände,
+  \item den $R^2$-Score.
+\end{enumerate}
+}
+
+\loesung{
+Mit $\hat{y}_i := f(\mathbf{x}_i)$ und $m$ Datenpunkten gilt
+\[
+E_{\text{modell}} = \sum_{i=1}^{m}\bigl(y_i - \hat{y}_i\bigr)^2,
+\qquad
+R^2 = 1 - \frac{E_{\text{modell}}}{E_{\text{vergleich}}},
+\qquad
+E_{\text{vergleich}} = \sum_{i=1}^{m}\bigl(y_i - \bar{y}\bigr)^2,
+\qquad
+\bar{y} = \frac{1}{m}\sum_{i=1}^{m} y_i.
+\]
+
+\medskip
+Vorhersagen und Residuen ($m=4$):
+\begin{itemize}
+  \item $\hat{y}_1 = f(5,1,0) = 1+5+2-0 = 8$, \quad $y_1=7$, \quad $(y_1-\hat{y}_1)^2 = 1$
+  \item $\hat{y}_2 = f(1,4,2) = 1+1+8-2 = 8$, \quad $y_2=8$, \quad $(y_2-\hat{y}_2)^2 = 0$
+  \item $\hat{y}_3 = f(0,2,2) = 1+0+4-2 = 3$, \quad $y_3=2$, \quad $(y_3-\hat{y}_3)^2 = 1$
+  \item $\hat{y}_4 = f(4,0,2) = 1+4+0-2 = 3$, \quad $y_4=3$, \quad $(y_4-\hat{y}_4)^2 = 0$
+\end{itemize}
+
+\begin{enumerate}[label=\alph*)]
+  \item Summe der quadrierten Abstände:
+  \[
+  E_{\text{modell}} = 1+0+1+0 = 2.
+  \]
+
+  \item Mittelwert: $\bar{y} = \dfrac{7+8+2+3}{4} = \dfrac{20}{4} = 5$.
+
+  Fehler des Vergleichsmodells:
+  \[
+  E_{\text{vergleich}}
+  = (7-5)^2+(8-5)^2+(2-5)^2+(3-5)^2
+  = 4+9+9+4 = 26.
+  \]
+  \[
+  R^2 = 1 - \frac{2}{26} = \frac{12}{13} \approx 0{,}923.
+  \]
+\end{enumerate}
+}
+
+
+\aufgabe{
+Gegeben seien die Testdatenpunkte im Format $((x_1,\dots,x_5),\,y)$ mit
+Eingangsdimension $n=5$:
+\[
+((2,1,0,1,3),\,2),\quad
+((1,0,2,1,1),\,7),\quad
+((0,2,1,0,0),\,2),
+\]
+\[
+((3,1,1,2,1),\,7),\quad
+((1,1,0,0,1),\,2).
+\]
+Weiter sei die Regressionsfunktion
+\[
+f(\mathbf{x}) = u_0 + \mathbf{b}\cdot\mathbf{x}, \qquad
+u_0 = 2,\ \mathbf{b} = (1,-1,2,1,-1)
+\]
+gegeben, also $f(\mathbf{x}) = 2 + x_1 - x_2 + 2x_3 + x_4 - x_5$.
+
+Bestimmen Sie:
+\begin{enumerate}[label=\alph*)]
+  \item die Summe der quadrierten Abstände,
+  \item den $R^2$-Score.
+\end{enumerate}
+}
+
+\loesung{
+Mit $\hat{y}_i := f(\mathbf{x}_i)$ und $m$ Datenpunkten gilt
+\[
+E_{\text{modell}} = \sum_{i=1}^{m}\bigl(y_i - \hat{y}_i\bigr)^2,
+\qquad
+R^2 = 1 - \frac{E_{\text{modell}}}{E_{\text{vergleich}}},
+\qquad
+E_{\text{vergleich}} = \sum_{i=1}^{m}\bigl(y_i - \bar{y}\bigr)^2,
+\qquad
+\bar{y} = \frac{1}{m}\sum_{i=1}^{m} y_i.
+\]
+
+\medskip
+Vorhersagen und Residuen ($m=5$):
+\begin{itemize}
+  \item $\hat{y}_1 = f(2,1,0,1,3) = 2+2-1+0+1-3 = 1$, \quad $y_1=2$, \quad $(y_1-\hat{y}_1)^2 = 1$
+  \item $\hat{y}_2 = f(1,0,2,1,1) = 2+1-0+4+1-1 = 7$, \quad $y_2=7$, \quad $(y_2-\hat{y}_2)^2 = 0$
+  \item $\hat{y}_3 = f(0,2,1,0,0) = 2+0-2+2+0-0 = 2$, \quad $y_3=2$, \quad $(y_3-\hat{y}_3)^2 = 0$
+  \item $\hat{y}_4 = f(3,1,1,2,1) = 2+3-1+2+2-1 = 7$, \quad $y_4=7$, \quad $(y_4-\hat{y}_4)^2 = 0$
+  \item $\hat{y}_5 = f(1,1,0,0,1) = 2+1-1+0+0-1 = 1$, \quad $y_5=2$, \quad $(y_5-\hat{y}_5)^2 = 1$
+\end{itemize}
+
+\begin{enumerate}[label=\alph*)]
+  \item Summe der quadrierten Abstände:
+  \[
+  E_{\text{modell}} = 1+0+0+0+1 = 2.
+  \]
+
+  \item Mittelwert: $\bar{y} = \dfrac{2+7+2+7+2}{5} = \dfrac{20}{5} = 4$.
+
+  Fehler des Vergleichsmodells:
+  \[
+  E_{\text{vergleich}}
+  = (2-4)^2+(7-4)^2+(2-4)^2+(7-4)^2+(2-4)^2
+  = 4+9+4+9+4 = 30.
+  \]
+  \[
+  R^2 = 1 - \frac{2}{30} = \frac{14}{15} \approx 0{,}933.
+  \]
+\end{enumerate}
+}

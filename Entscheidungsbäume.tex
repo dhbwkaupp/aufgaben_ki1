@@ -1,0 +1,230 @@
+\section{Entscheidungsbäume}
+\setcounter{aufgabe}{0}
+
+
+% ============================================================
+% AUFGABE 1 (einfach)
+% ============================================================
+\aufgabe{
+Gegeben sei der folgende Trainingsdatensatz. Zielattribut ist \textbf{Grillen}.
+\begin{center}
+{\scriptsize
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\rowcolors{2}{SecondaryColor!12}{white}
+\begin{tabular}{c c c c}
+\rowcolor{PrimaryColor}
+\textcolor{white}{\textbf{Nr.}} &
+\textcolor{white}{\textbf{Wochenende}} &
+\textcolor{white}{\textbf{Regen}} &
+\textcolor{white}{\textbf{Grillen}}\\
+1 & Ja   & Nein & Ja\\
+2 & Ja   & Nein & Ja\\
+3 & Ja   & Ja   & Nein\\
+4 & Nein & Nein & Nein\\
+5 & Nein & Nein & Nein\\
+6 & Nein & Ja   & Nein\\
+\end{tabular}}
+\end{center}
+
+Erstellen Sie mit dem ID3-Algorithmus einen Entscheidungsbaum:
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie die bedingte Entropie $H(V \mid W)$ für beide Attribute
+        und bestimmen Sie das Wurzelattribut.
+  \item Setzen Sie das Verfahren rekursiv fort und zeichnen Sie den vollständigen
+        Entscheidungsbaum.
+\end{enumerate}
+}
+
+\loesung{
+Es genügt, die bedingte Entropie $H(V \mid W)$ zu berechnen und das
+\textbf{kleinste} zu wählen, da $H(V)$ am Knoten konstant ist.
+
+\begin{enumerate}[label=\alph*)]
+  \item Von $6$ Beispielen sind $2\times$ Grillen ja und $4\times$ nein.
+  \[
+    H(\text{Grillen} \mid \text{Wochenende}) = -\Bigl[\,
+      \underbrace{\tfrac{3}{6}}_{\text{Wo. ja}}
+      \bigl(\tfrac{2}{3}\log_2\tfrac{2}{3} + \tfrac{1}{3}\log_2\tfrac{1}{3}\bigr)
+      +
+      \underbrace{\tfrac{3}{6}}_{\text{Wo. nein}}
+      \bigl(\tfrac{3}{3}\log_2\tfrac{3}{3}\bigr)
+    \,\Bigr] \approx 0{,}4592
+  \]
+  \[
+    H(\text{Grillen} \mid \text{Regen}) = -\Bigl[\,
+      \underbrace{\tfrac{4}{6}}_{\text{R. nein}}
+      \bigl(\tfrac{2}{4}\log_2\tfrac{2}{4} + \tfrac{2}{4}\log_2\tfrac{2}{4}\bigr)
+      +
+      \underbrace{\tfrac{2}{6}}_{\text{R. ja}}
+      \bigl(\tfrac{2}{2}\log_2\tfrac{2}{2}\bigr)
+    \,\Bigr] \approx 0{,}6667
+  \]
+  Kleinste bedingte Entropie: \textbf{Wochenende} $\Rightarrow$ Wurzelattribut.
+
+  \item Der Zweig \textbf{Wochenende = nein} ist rein (nur Grillen nein), also ein
+  Blatt. Im Zweig \textbf{Wochenende = ja} (Beispiele 1--3) verbleibt nur das
+  Attribut \textbf{Regen}, das die Restmenge exakt trennt:
+  \[
+    \text{Regen nein} \Rightarrow \text{Grillen},
+    \qquad
+    \text{Regen ja} \Rightarrow \text{nicht Grillen}.
+  \]
+
+  \vspace{0.4em}
+  \centering
+  \resizebox{0.6\linewidth}{!}{%
+  \begin{tikzpicture}[
+    test/.style={draw=PrimaryColor, very thick, rounded corners=4pt,
+                 align=center, inner sep=5pt, text width=2.0cm, font=\footnotesize},
+    rad/.style={draw=ExampleTitle, very thick, ellipse, align=center,
+                inner sep=2pt, text width=1.3cm, minimum height=1.1cm, font=\scriptsize},
+    nicht/.style={draw=AlertTitle, very thick, ellipse, align=center,
+                  inner sep=2pt, text width=1.3cm, minimum height=1.1cm, font=\scriptsize},
+    kante/.style={->, >=Stealth, thick},
+    lab/.style={font=\footnotesize\itshape, fill=white, inner sep=1pt}
+  ]
+    \node[test]  (wo)   at (0,0)       {Wochenende};
+    \node[test]  (re)   at (-2.6,-1.8) {Regen};
+    \node[nicht] (n1)   at (2.6,-1.8)  {nicht Grillen};
+    \node[rad]   (g1)   at (-4.2,-3.6) {Grillen};
+    \node[nicht] (n2)   at (-1.0,-3.6) {nicht Grillen};
+
+    \draw[kante] (wo) -- (re) node[lab, midway] {ja};
+    \draw[kante] (wo) -- (n1) node[lab, midway] {nein};
+    \draw[kante] (re) -- (g1) node[lab, midway] {nein};
+    \draw[kante] (re) -- (n2) node[lab, midway] {ja};
+  \end{tikzpicture}}
+\end{enumerate}
+}
+
+
+% ============================================================
+% AUFGABE 2 (schwierig, binäre Attribute)
+% ============================================================
+\aufgabe{
+Gegeben sei der folgende Trainingsdatensatz. Zielattribut ist \textbf{Joggen}.
+Alle Attribute sind binär.
+\begin{center}
+{\scriptsize
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\rowcolors{2}{SecondaryColor!12}{white}
+\begin{tabular}{c c c c c}
+\rowcolor{PrimaryColor}
+\textcolor{white}{\textbf{Nr.}} &
+\textcolor{white}{\textbf{Regen}} &
+\textcolor{white}{\textbf{Windig}} &
+\textcolor{white}{\textbf{Kalt}} &
+\textcolor{white}{\textbf{Joggen}}\\
+1 & Ja   & Nein & Nein & Nein\\
+2 & Ja   & Ja   & Ja   & Nein\\
+3 & Ja   & Nein & Ja   & Nein\\
+4 & Nein & Nein & Nein & Ja\\
+5 & Nein & Nein & Ja   & Ja\\
+6 & Nein & Nein & Ja   & Ja\\
+7 & Nein & Ja   & Nein & Ja\\
+8 & Nein & Ja   & Ja   & Nein\\
+9 & Nein & Ja   & Ja   & Nein\\
+\end{tabular}}
+\end{center}
+
+Erstellen Sie mit dem ID3-Algorithmus einen Entscheidungsbaum:
+\begin{enumerate}[label=\alph*)]
+  \item Bestimmen Sie über die bedingte Entropie $H(V \mid W)$ das Wurzelattribut.
+  \item Führen Sie die Attributwahl rekursiv fort und zeichnen Sie den
+        vollständigen Entscheidungsbaum.
+\end{enumerate}
+}
+
+\loesung{
+Von $9$ Beispielen sind $4\times$ Joggen ja und $5\times$ nein. Es genügt, die
+bedingte Entropie $H(V \mid W)$ zu berechnen und das \textbf{kleinste} zu wählen.
+
+\begin{enumerate}[label=\alph*)]
+  \item \textbf{Wurzel:} bedingte Entropie je Attribut.
+  \[
+    H(V \mid \text{Regen}) = -\Bigl[\,
+      \underbrace{\tfrac{3}{9}}_{\text{ja}}\bigl(\tfrac{3}{3}\log_2\tfrac{3}{3}\bigr)
+      +
+      \underbrace{\tfrac{6}{9}}_{\text{nein}}
+      \bigl(\tfrac{4}{6}\log_2\tfrac{4}{6} + \tfrac{2}{6}\log_2\tfrac{2}{6}\bigr)
+    \,\Bigr] \approx 0{,}6122
+  \]
+  \[
+    H(V \mid \text{Windig}) = -\Bigl[\,
+      \underbrace{\tfrac{5}{9}}_{\text{nein}}
+      \bigl(\tfrac{3}{5}\log_2\tfrac{3}{5} + \tfrac{2}{5}\log_2\tfrac{2}{5}\bigr)
+      +
+      \underbrace{\tfrac{4}{9}}_{\text{ja}}
+      \bigl(\tfrac{1}{4}\log_2\tfrac{1}{4} + \tfrac{3}{4}\log_2\tfrac{3}{4}\bigr)
+    \,\Bigr] \approx 0{,}9000
+  \]
+  \[
+    H(V \mid \text{Kalt}) = -\Bigl[\,
+      \underbrace{\tfrac{3}{9}}_{\text{nein}}
+      \bigl(\tfrac{2}{3}\log_2\tfrac{2}{3} + \tfrac{1}{3}\log_2\tfrac{1}{3}\bigr)
+      +
+      \underbrace{\tfrac{6}{9}}_{\text{ja}}
+      \bigl(\tfrac{2}{6}\log_2\tfrac{2}{6} + \tfrac{4}{6}\log_2\tfrac{4}{6}\bigr)
+    \,\Bigr] \approx 0{,}9183
+  \]
+  Kleinste bedingte Entropie: \textbf{Regen} $\Rightarrow$ Wurzelattribut.
+
+  \item \textbf{Rekursion.} Der Zweig \textbf{Regen = ja} (Beispiele 1--3) ist
+  rein (nur Joggen nein), also ein Blatt.
+
+  \medskip
+  Im Zweig \textbf{Regen = nein} (Beispiele 4--9; $4\times$ ja, $2\times$ nein)
+  verbleiben \textbf{Windig} und \textbf{Kalt}:
+  \[
+    H(V \mid \text{Windig}) = -\Bigl[\,
+      \underbrace{\tfrac{3}{6}}_{\text{nein}}\bigl(\tfrac{3}{3}\log_2\tfrac{3}{3}\bigr)
+      +
+      \underbrace{\tfrac{3}{6}}_{\text{ja}}
+      \bigl(\tfrac{1}{3}\log_2\tfrac{1}{3} + \tfrac{2}{3}\log_2\tfrac{2}{3}\bigr)
+    \,\Bigr] \approx 0{,}4591
+  \]
+  \[
+    H(V \mid \text{Kalt}) = -\Bigl[\,
+      \underbrace{\tfrac{2}{6}}_{\text{nein}}\bigl(\tfrac{2}{2}\log_2\tfrac{2}{2}\bigr)
+      +
+      \underbrace{\tfrac{4}{6}}_{\text{ja}}
+      \bigl(\tfrac{2}{4}\log_2\tfrac{2}{4} + \tfrac{2}{4}\log_2\tfrac{2}{4}\bigr)
+    \,\Bigr] \approx 0{,}6667
+  \]
+  Kleinste bedingte Entropie: \textbf{Windig}. Der Zweig \textbf{Windig = nein}
+  ist rein (Joggen). Im Zweig \textbf{Windig = ja} (Beispiele 7--9) trennt das
+  letzte Attribut \textbf{Kalt} exakt: nein $\Rightarrow$ Joggen,
+  ja $\Rightarrow$ nicht Joggen.
+
+  \vspace{0.4em}
+  \centering
+  \resizebox{0.85\linewidth}{!}{%
+  \begin{tikzpicture}[
+    test/.style={draw=PrimaryColor, very thick, rounded corners=4pt,
+                 align=center, inner sep=5pt, text width=1.7cm, font=\footnotesize},
+    rad/.style={draw=ExampleTitle, very thick, ellipse, align=center,
+                inner sep=2pt, text width=1.3cm, minimum height=1.1cm, font=\scriptsize},
+    nicht/.style={draw=AlertTitle, very thick, ellipse, align=center,
+                  inner sep=2pt, text width=1.3cm, minimum height=1.1cm, font=\scriptsize},
+    kante/.style={->, >=Stealth, thick},
+    lab/.style={font=\footnotesize\itshape, fill=white, inner sep=1pt}
+  ]
+    \node[test]  (regen) at (0,0)       {Regen};
+    \node[test]  (wind)  at (-3.2,-1.9) {Windig};
+    \node[nicht] (n1)    at (3.2,-1.9)  {nicht Joggen};
+    \node[rad]   (j1)    at (-5.4,-3.8) {Joggen};
+    \node[test]  (kalt)  at (-1.6,-3.8) {Kalt};
+    \node[rad]   (j2)    at (-3.2,-5.7) {Joggen};
+    \node[nicht] (n2)    at (0.0,-5.7)  {nicht Joggen};
+
+    \draw[kante] (regen) -- (wind) node[lab, midway] {nein};
+    \draw[kante] (regen) -- (n1)   node[lab, midway] {ja};
+    \draw[kante] (wind)  -- (j1)   node[lab, midway] {nein};
+    \draw[kante] (wind)  -- (kalt) node[lab, midway] {ja};
+    \draw[kante] (kalt)  -- (j2)   node[lab, midway] {nein};
+    \draw[kante] (kalt)  -- (n2)   node[lab, midway] {ja};
+  \end{tikzpicture}}
+\end{enumerate}
+}

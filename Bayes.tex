@@ -1,0 +1,228 @@
+\section{Naiver Bayes}
+\setcounter{aufgabe}{0}
+
+% ============================================================
+% AUFGABE 1: Satz von Bayes + totale Wahrscheinlichkeit
+% ============================================================
+\aufgabe{
+Ein Betrieb sortiert \textbf{Lachs} und \textbf{Barsch}. In der Produktion sind
+$70\,\%$ der Fische Lachse und $30\,\%$ Barsche. Ein Helligkeitssensor meldet
+\textbf{hell}: Lachse sind zu $80\,\%$ hell, Barsche nur zu $20\,\%$.
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie über den Satz der totalen Wahrscheinlichkeit die
+        Wahrscheinlichkeit $P(\text{hell})$.
+  \item Ein Fisch wird als \textbf{hell} gemessen. Bestimmen Sie mit dem Satz
+        von Bayes $P(\text{Lachs} \mid \text{hell})$.
+  \item Wie wahrscheinlich ist es, dass dieser Fisch ein \textbf{Barsch} ist?
+\end{enumerate}
+}
+
+\loesung{
+\textbf{Gegebene Größen}
+\[
+\begin{aligned}
+P(\text{Lachs}) &= 0{,}70 & P(\text{Barsch}) &= 0{,}30\\
+P(\text{hell} \mid \text{Lachs}) &= 0{,}80 &
+P(\text{hell} \mid \text{Barsch}) &= 0{,}20
+\end{aligned}
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Totale Wahrscheinlichkeit für \textbf{hell}:
+  \[
+    P(\text{hell}) = P(\text{hell} \mid \text{Lachs})\,P(\text{Lachs})
+                   + P(\text{hell} \mid \text{Barsch})\,P(\text{Barsch})
+  \]
+  \[
+    P(\text{hell}) = 0{,}80 \cdot 0{,}70 + 0{,}20 \cdot 0{,}30
+                   = 0{,}56 + 0{,}06 = 0{,}62.
+  \]
+
+  \item Satz von Bayes:
+  \[
+    P(\text{Lachs} \mid \text{hell})
+      = \frac{P(\text{hell} \mid \text{Lachs})\,P(\text{Lachs})}{P(\text{hell})}
+      = \frac{0{,}56}{0{,}62} \approx 0{,}903.
+  \]
+
+  \item Gegenwahrscheinlichkeit:
+  \[
+    P(\text{Barsch} \mid \text{hell}) = 1 - P(\text{Lachs} \mid \text{hell})
+      = \frac{0{,}06}{0{,}62} \approx 0{,}097.
+  \]
+\end{enumerate}
+}
+
+
+% ============================================================
+% AUFGABE 2: Naive Bayes mit diskreten Merkmalen
+% ============================================================
+\aufgabe{
+Gegeben sei folgender Trainingsdatensatz mit den binären Merkmalen
+\textbf{Länge} und \textbf{Helligkeit} sowie der Klasse (Lachs/Barsch).
+\begin{center}
+{\scriptsize
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\rowcolors{2}{SecondaryColor!12}{white}
+\begin{tabular}{c c c c}
+\rowcolor{PrimaryColor}
+\textcolor{white}{\textbf{Nr.}} &
+\textcolor{white}{\textbf{Länge}} &
+\textcolor{white}{\textbf{Helligkeit}} &
+\textcolor{white}{\textbf{Klasse}}\\
+1 & lang & hell   & Lachs\\
+2 & lang & hell   & Lachs\\
+3 & lang & dunkel & Lachs\\
+4 & lang & hell   & Lachs\\
+5 & kurz & hell   & Lachs\\
+6 & lang & hell   & Lachs\\
+7 & kurz & dunkel & Barsch\\
+8 & kurz & dunkel & Barsch\\
+9 & lang & dunkel & Barsch\\
+10& kurz & hell   & Barsch\\
+\end{tabular}}
+\end{center}
+
+Ein neuer Fisch $B$ hat \textbf{Länge $=$ lang} und \textbf{Helligkeit $=$ hell}.
+Klassifizieren Sie $B$ mit dem Naive-Bayes-Klassifikator.
+\begin{enumerate}[label=\alph*)]
+  \item Schätzen Sie die A-priori-Wahrscheinlichkeiten und die bedingten
+        Wahrscheinlichkeiten aus den Häufigkeiten.
+  \item Berechnen Sie für beide Klassen den Term
+        $P(K)\cdot P(\text{Länge} \mid K)\cdot P(\text{Helligkeit} \mid K)$
+        und bestimmen Sie die Klasse von $B$.
+\end{enumerate}
+}
+
+\loesung{
+Für den Vergleich genügt der Zähler $P(K)\cdot\prod_i P(M_i \mid K)$, da der
+Nenner $P(B)$ für beide Klassen gleich ist.
+
+\begin{enumerate}[label=\alph*)]
+  \item Von $10$ Fischen sind $6$ Lachse und $4$ Barsche:
+  \[
+    P(\text{Lachs}) = \tfrac{6}{10} = 0{,}6,
+    \qquad
+    P(\text{Barsch}) = \tfrac{4}{10} = 0{,}4.
+  \]
+  Bedingte Wahrscheinlichkeiten:
+  \[
+    P(\text{lang} \mid \text{Lachs}) = \tfrac{5}{6},
+    \qquad
+    P(\text{hell} \mid \text{Lachs}) = \tfrac{5}{6},
+  \]
+  \[
+    P(\text{lang} \mid \text{Barsch}) = \tfrac{1}{4},
+    \qquad
+    P(\text{hell} \mid \text{Barsch}) = \tfrac{1}{4}.
+  \]
+
+  \item Zähler je Klasse:
+  \[
+    P(\text{Lachs})\cdot P(\text{lang}\mid\text{Lachs})\cdot P(\text{hell}\mid\text{Lachs})
+      = 0{,}6 \cdot \tfrac{5}{6} \cdot \tfrac{5}{6}
+      = 0{,}6 \cdot \tfrac{25}{36} \approx 0{,}4167.
+  \]
+  \[
+    P(\text{Barsch})\cdot P(\text{lang}\mid\text{Barsch})\cdot P(\text{hell}\mid\text{Barsch})
+      = 0{,}4 \cdot \tfrac{1}{4} \cdot \tfrac{1}{4}
+      = 0{,}4 \cdot \tfrac{1}{16} = 0{,}025.
+  \]
+  Wegen $0{,}4167 > 0{,}025$ wird $B$ als \textbf{Lachs} klassifiziert.
+
+  Normiert ergibt sich:
+  \[
+    P(\text{Lachs} \mid B) = \frac{0{,}4167}{0{,}4167 + 0{,}025}
+      \approx 0{,}943,
+    \qquad
+    P(\text{Barsch} \mid B) \approx 0{,}057.
+  \]
+\end{enumerate}
+}
+
+
+% ============================================================
+% AUFGABE 3: Naive Bayes mit Gauß-Dichte
+% ============================================================
+\aufgabe{
+Für die Merkmale \textbf{Helligkeit} und \textbf{Länge} wurden pro Klasse
+Normalverteilungen mit Mittelwert $\mu$ und Standardabweichung $\sigma$
+geschätzt:
+\begin{center}
+{\scriptsize
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\rowcolors{2}{SecondaryColor!12}{white}
+\begin{tabular}{c c c c c}
+\rowcolor{PrimaryColor}
+\textcolor{white}{\textbf{Klasse}} &
+\textcolor{white}{\textbf{$\mu_{\text{Hell}}$}} &
+\textcolor{white}{\textbf{$\sigma_{\text{Hell}}$}} &
+\textcolor{white}{\textbf{$\mu_{\text{Länge}}$}} &
+\textcolor{white}{\textbf{$\sigma_{\text{Länge}}$}}\\
+Lachs  & 6 & 2 & 12 & 3\\
+Barsch & 9 & 2 & 8  & 3\\
+\end{tabular}}
+\end{center}
+
+Die Klassen sind gleich häufig, also $P(\text{Lachs}) = P(\text{Barsch}) = 0{,}5$.
+Ein neuer Fisch $B$ hat \textbf{Helligkeit $= 7$} und \textbf{Länge $= 10$}.
+Klassifizieren Sie $B$ mit dem Naive-Bayes-Klassifikator über die
+Gauß-Dichtefunktion
+\[
+  f(x) = \frac{1}{\sigma\sqrt{2\pi}}\,
+         \exp\!\Bigl(-\frac{(x-\mu)^2}{2\sigma^2}\Bigr).
+\]
+}
+
+\loesung{
+Wegen der Unabhängigkeitsannahme gilt
+$P(K)\cdot f(\text{Hell}{=}7 \mid K)\cdot f(\text{Länge}{=}10 \mid K)$.
+
+\medskip
+\textbf{Dichtewerte Lachs}
+\[
+  f(\text{Hell}{=}7 \mid \text{Lachs})
+    = \frac{1}{2\sqrt{2\pi}}\,\exp\!\Bigl(-\frac{(7-6)^2}{2\cdot 2^2}\Bigr)
+    = 0{,}1995 \cdot e^{-0{,}125} \approx 0{,}1760,
+\]
+\[
+  f(\text{Länge}{=}10 \mid \text{Lachs})
+    = \frac{1}{3\sqrt{2\pi}}\,\exp\!\Bigl(-\frac{(10-12)^2}{2\cdot 3^2}\Bigr)
+    = 0{,}1330 \cdot e^{-0{,}2222} \approx 0{,}1065.
+\]
+
+\textbf{Dichtewerte Barsch}
+\[
+  f(\text{Hell}{=}7 \mid \text{Barsch})
+    = \frac{1}{2\sqrt{2\pi}}\,\exp\!\Bigl(-\frac{(7-9)^2}{2\cdot 2^2}\Bigr)
+    = 0{,}1995 \cdot e^{-0{,}5} \approx 0{,}1210,
+\]
+\[
+  f(\text{Länge}{=}10 \mid \text{Barsch})
+    = \frac{1}{3\sqrt{2\pi}}\,\exp\!\Bigl(-\frac{(10-8)^2}{2\cdot 3^2}\Bigr)
+    = 0{,}1330 \cdot e^{-0{,}2222} \approx 0{,}1065.
+\]
+
+\medskip
+\textbf{Zähler je Klasse}
+\[
+  P(\text{Lachs})\cdot 0{,}1760 \cdot 0{,}1065
+    = 0{,}5 \cdot 0{,}01874 \approx 0{,}00937,
+\]
+\[
+  P(\text{Barsch})\cdot 0{,}1210 \cdot 0{,}1065
+    = 0{,}5 \cdot 0{,}01288 \approx 0{,}00644.
+\]
+Wegen $0{,}00937 > 0{,}00644$ wird $B$ als \textbf{Lachs} klassifiziert.
+
+Normiert:
+\[
+  P(\text{Lachs} \mid B) \approx \frac{0{,}00937}{0{,}00937 + 0{,}00644}
+    \approx 0{,}593,
+  \qquad
+  P(\text{Barsch} \mid B) \approx 0{,}407.
+\]
+}
