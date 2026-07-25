@@ -145,53 +145,8 @@ Ein linear trennbares Problem im $\mathbb{R}^2$ habe drei Support Vectors:
 \end{enumerate}
 }
 
-
 % ============================================================
-% AUFGABE 4: RBF-Kernel und Schlupfvariablen
-% ============================================================
-\aufgabe{
-\begin{enumerate}[label=\alph*)]
-  \item Der RBF-Kernel ist definiert durch
-        $K(\mathbf{x}, \mathbf{y}) = e^{-\gamma\,\lVert\mathbf{x}-\mathbf{y}\rVert^2}$.
-        Berechnen Sie mit $\gamma = 0{,}5$ die Ähnlichkeit
-        $K(\mathbf{x}, \mathbf{y})$ für
-        $\mathbf{x} = \begin{pmatrix} 1 \\ 2 \end{pmatrix}$,
-        $\mathbf{y} = \begin{pmatrix} 3 \\ 2 \end{pmatrix}$.
-  \item Geben Sie $K(\mathbf{x}, \mathbf{x})$ an und begründen Sie den Wert.
-  \item Ein Punkt mit Label $y_i = +1$ erfüllt
-        $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) = -0{,}3$. Bestimmen Sie die
-        Schlupfvariable $\xi_i$ aus $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) \geq 1 - \xi_i$
-        (mit Gleichheit) und entscheiden Sie, ob der Punkt korrekt klassifiziert
-        ist.
-\end{enumerate}
-}
-
-\loesung{
-\begin{enumerate}[label=\alph*)]
-  \item Quadratischer Abstand:
-  \[
-    \lVert\mathbf{x}-\mathbf{y}\rVert^2 = (1-3)^2 + (2-2)^2 = 4 + 0 = 4.
-  \]
-  \[
-    K(\mathbf{x}, \mathbf{y}) = e^{-0{,}5\cdot 4} = e^{-2} \approx 0{,}135.
-  \]
-
-  \item Am selben Punkt ist der Abstand null:
-  \[
-    K(\mathbf{x}, \mathbf{x}) = e^{-\gamma\cdot 0} = e^{0} = 1.
-  \]
-  Der Kernel misst Ähnlichkeit; identische Punkte haben maximale Ähnlichkeit $1$.
-
-  \item Aus $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) = 1 - \xi_i$ folgt
-  \[
-    \xi_i = 1 - \bigl(-0{,}3\bigr) = 1{,}3.
-  \]
-  Wegen $\xi_i \geq 1$ liegt eine \textbf{Fehlklassifikation} vor.
-\end{enumerate}
-}
-
-% ============================================================
-% AUFGABE 5: Klassifikation mit polynomialem Kernel
+% AUFGABE 4: Klassifikation mit polynomialem Kernel
 % ============================================================
 \aufgabe{
 Eine SVM mit \textbf{polynomialem Kernel}
@@ -248,7 +203,7 @@ Klassifizieren Sie das Sample $\mathbf{z} = \begin{pmatrix} 2 \\ 0 \end{pmatrix}
 
 
 % ============================================================
-% AUFGABE 6: Klassifikation mit RBF-Kernel
+% AUFGABE 4: Klassifikation mit RBF-Kernel
 % ============================================================
 \aufgabe{
 Eine SVM mit \textbf{RBF-Kernel}
@@ -306,4 +261,49 @@ Klassifizieren Sie das Sample $\mathbf{z} = \begin{pmatrix} 1 \\ 0 \end{pmatrix}
 \textbf{Deutung:} $\mathbf{z}$ liegt näher am Support Vector der Klasse A
 (Abstand$^2 = 1$) als an dem der Klasse B (Abstand$^2 = 5$). Da der RBF-Kernel
 Nähe als Ähnlichkeit misst, überwiegt der Beitrag der Klasse A.
+}
+
+
+% ============================================================
+% AUFGABE 6: RBF-Kernel und Schlupfvariablen
+% ============================================================
+\aufgabe{
+\begin{enumerate}[label=\alph*)]
+  \item Der RBF-Kernel ist definiert durch
+        $K(\mathbf{x}, \mathbf{y}) = e^{-\gamma\,\lVert\mathbf{x}-\mathbf{y}\rVert^2}$.
+        Berechnen Sie mit $\gamma = 0{,}5$ die Ähnlichkeit
+        $K(\mathbf{x}, \mathbf{y})$ für
+        $\mathbf{x} = \begin{pmatrix} 1 \\ 2 \end{pmatrix}$,
+        $\mathbf{y} = \begin{pmatrix} 3 \\ 2 \end{pmatrix}$.
+  \item Geben Sie $K(\mathbf{x}, \mathbf{x})$ an und begründen Sie den Wert.
+  \item Ein Punkt mit Label $y_i = +1$ erfüllt
+        $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) = -0{,}3$. Bestimmen Sie die
+        Schlupfvariable $\xi_i$ aus $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) \geq 1 - \xi_i$
+        (mit Gleichheit) und entscheiden Sie, ob der Punkt korrekt klassifiziert
+        ist.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Quadratischer Abstand:
+  \[
+    \lVert\mathbf{x}-\mathbf{y}\rVert^2 = (1-3)^2 + (2-2)^2 = 4 + 0 = 4.
+  \]
+  \[
+    K(\mathbf{x}, \mathbf{y}) = e^{-0{,}5\cdot 4} = e^{-2} \approx 0{,}135.
+  \]
+
+  \item Am selben Punkt ist der Abstand null:
+  \[
+    K(\mathbf{x}, \mathbf{x}) = e^{-\gamma\cdot 0} = e^{0} = 1.
+  \]
+  Der Kernel misst Ähnlichkeit; identische Punkte haben maximale Ähnlichkeit $1$.
+
+  \item Aus $y_i\cdot(w_0 + \mathbf{w}\cdot\mathbf{x}_i) = 1 - \xi_i$ folgt
+  \[
+    \xi_i = 1 - \bigl(-0{,}3\bigr) = 1{,}3.
+  \]
+  Wegen $\xi_i \geq 1$ liegt eine \textbf{Fehlklassifikation} vor.
+\end{enumerate}
 }
