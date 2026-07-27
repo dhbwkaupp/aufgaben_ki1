@@ -1,0 +1,1222 @@
+\section{Deep Learning}
+\setcounter{aufgabe}{0}
+
+\subsection{Deep Neural Networks}
+
+% ===================================================================
+% Aufgaben zu Deep Learning (Keras)
+% Themen: Tensoren, Dense-Layer-Parameter, ReLU,
+%         Binary/Categorical Crossentropy, Softmax,
+%         Metriken bei unausgewogenen Klassen,
+%         Optimizer (Momentum, RMSprop, Adam)
+% ===================================================================
+
+% -------------------------------------------------------------------
+% 1) Tensoren: Form und Anzahl der Eintraege
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Datensatz besteht aus $60\,000$ RGB-Bildern der Größe
+$32 \times 32$ Pixel mit drei Farbkanälen.
+
+\begin{enumerate}[label=\alph*)]
+  \item Geben Sie den Rang und die Form (shape) des Tensors an, der den
+        \textbf{gesamten} Datensatz enthält.
+  \item Wie viele einzelne Zahlenwerte enthält dieser Tensor?
+  \item Für das Training mit einem Fully-connected-Netz wird jedes Bild zu
+        einem Vektor \glqq plattgedrückt\grqq{} (geflattet). Welche Form hat
+        der Eingabetensor eines einzelnen Bildes dann?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Der Datensatz ist ein \textbf{Rang-4-Tensor} mit der Form
+  \[
+    (60\,000,\; 32,\; 32,\; 3) .
+  \]
+  Die Achsen sind Bildindex, Höhe, Breite und Kanäle.
+
+  \item Anzahl der Einträge:
+  \[
+    60\,000 \cdot 32 \cdot 32 \cdot 3 = 184\,320\,000 .
+  \]
+
+  \item Ein einzelnes Bild wird zu einem Vektor der Länge
+  $32 \cdot 32 \cdot 3 = 3072$, also Form $(3072,)$ (Rang 1).
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 2) Dense-Layer: Anzahl der Parameter
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Fully-connected-Netz (nur Dense-Layer, jeweils mit Bias) hat folgende
+Struktur:
+\[
+  784 \;\rightarrow\; 300 \;\rightarrow\; 100 \;\rightarrow\; 10 .
+\]
+Für eine Dense-Schicht mit $n_{\text{in}}$ Eingängen und
+$n_{\text{out}}$ Neuronen gilt
+\[
+  \#\text{Gewichte} = n_{\text{in}}\cdot n_{\text{out}}, \qquad
+  \#\text{Bias} = n_{\text{out}} .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie die Parameterzahl jeder einzelnen Schicht.
+  \item Geben Sie die Gesamtzahl der trainierbaren Parameter an.
+  \item Wie viele Parameter würden wegfallen weg, wenn man in allen Schichten den
+        Bias deaktiviert (\texttt{use\_bias=False})?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Pro Schicht Gewichte plus Bias:
+  \[
+    784 \rightarrow 300: \quad 784\cdot 300 + 300 = 235\,200 + 300 = 235\,500 ,
+  \]
+  \[
+    300 \rightarrow 100: \quad 300\cdot 100 + 100 = 30\,000 + 100 = 30\,100 ,
+  \]
+  \[
+    100 \rightarrow 10: \quad 100\cdot 10 + 10 = 1\,000 + 10 = 1\,010 .
+  \]
+
+  \item Gesamt:
+  \[
+    235\,500 + 30\,100 + 1\,010 = \textbf{266\,610} .
+  \]
+
+  \item Ohne Bias entfielen $300 + 100 + 10 = \textbf{410}$ Parameter.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 3) Dense-Schicht: Vorwaertsrechnung mit ReLU
+% -------------------------------------------------------------------
+\aufgabe{
+Eine Dense-Schicht berechnet
+$\text{output} = a(\text{input}\cdot W + b)$. Gegeben sind
+\[
+  \text{input} = \begin{pmatrix} 1 & 2 \end{pmatrix},
+  \qquad
+  W = \begin{pmatrix} 1 & -2 & 0 \\ 0 & 1 & 3 \end{pmatrix},
+  \qquad
+  b = \begin{pmatrix} 1 & 0 & -1 \end{pmatrix},
+\]
+und $a = \text{ReLU}$ mit $\text{ReLU}(x) = \max(0, x)$.
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie den Vektor $\text{input}\cdot W + b$.
+  \item Wenden Sie die ReLU-Funktion komponentenweise an.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Matrix-Vektor-Produkt (Zeilenvektor mal Matrix):
+  \[
+    \text{input}\cdot W =
+    \begin{pmatrix} 1\cdot 1 + 2\cdot 0 & 1\cdot(-2) + 2\cdot 1 & 1\cdot 0 + 2\cdot 3 \end{pmatrix}
+    = \begin{pmatrix} 1 & 0 & 6 \end{pmatrix} .
+  \]
+  Addition des Bias:
+  \[
+    \text{input}\cdot W + b =
+    \begin{pmatrix} 1+1 & 0+0 & 6-1 \end{pmatrix}
+    = \begin{pmatrix} 2 & 0 & 5 \end{pmatrix} .
+  \]
+
+  \item ReLU komponentenweise:
+  \[
+    \text{ReLU}\begin{pmatrix} 2 & 0 & 5 \end{pmatrix}
+    = \begin{pmatrix} 2 & 0 & 5 \end{pmatrix} .
+  \]
+  Alle Werte sind hier bereits $\geq 0$, ReLU verändert sie nicht.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 4) Binary Crossentropy
+% -------------------------------------------------------------------
+\aufgabe{
+Für die binäre Klassifikation ist der Loss eines einzelnen Datensatzes
+\[
+  L(y, \hat{y}) = -\bigl[\, y\log(\hat{y}) + (1-y)\log(1-\hat{y}) \,\bigr]
+\]
+(natürlicher Logarithmus). Berechnen Sie den Loss für folgende Fälle:
+
+\begin{enumerate}[label=\alph*)]
+  \item $y = 1$, $\hat{y} = 0{,}9$ (sicher und richtig).
+  \item $y = 1$, $\hat{y} = 0{,}1$ (sicher und falsch).
+  \item Berechnen Sie den mittleren Loss über die drei Datensätze
+        $(y, \hat{y}) \in \{(1;\,0{,}8),\,(0;\,0{,}2),\,(0;\,0{,}7)\}$.
+\end{enumerate}
+Hinweis: $\log(0{,}9) \approx -0{,}105$, $\log(0{,}1) \approx -2{,}303$,
+$\log(0{,}8) \approx -0{,}223$, $\log(0{,}3) \approx -1{,}204$.
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Für $y = 1$ bleibt nur $-\log(\hat{y})$:
+  \[
+    L = -\log(0{,}9) \approx 0{,}105 .
+  \]
+
+  \item Ebenfalls $y = 1$, aber $\hat{y} = 0{,}1$:
+  \[
+    L = -\log(0{,}1) \approx 2{,}303 .
+  \]
+  Die sichere Fehlklassifikation wird also rund $22$-mal stärker bestraft.
+
+  \item Einzelverluste:
+  \[
+    (1;\,0{,}8): \; -\log(0{,}8) \approx 0{,}223,
+  \]
+  \[
+    (0;\,0{,}2): \; -\log(1-0{,}2) = -\log(0{,}8) \approx 0{,}223,
+  \]
+  \[
+    (0;\,0{,}7): \; -\log(1-0{,}7) = -\log(0{,}3) \approx 1{,}204 .
+  \]
+  Mittelwert:
+  \[
+    L = \frac{0{,}223 + 0{,}223 + 1{,}204}{3} \approx \frac{1{,}650}{3}
+      \approx 0{,}550 .
+  \]
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 5) Softmax
+% -------------------------------------------------------------------
+\aufgabe{
+Die Softmax-Funktion wandelt Logits in eine Wahrscheinlichkeitsverteilung um:
+\[
+  \text{softmax}(z)_k = \frac{e^{z_k}}{\sum_{j=1}^{K} e^{z_j}} .
+\]
+Gegeben seien die Logits $z = (1;\; 0;\; -1)$.
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie die Softmax-Wahrscheinlichkeiten $\hat{y}_0$,
+        $\hat{y}_1$, $\hat{y}_2$.
+  \item Zeigen Sie, dass $\sum_k \hat{y}_k = 1$ gilt.
+  \item Welche Klasse sagt das Netz vorher ($\arg\max_k \hat{y}_k$)?
+\end{enumerate}
+Hinweis: $e^{1} \approx 2{,}718$, $e^{0} = 1$, $e^{-1} \approx 0{,}368$.
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Summe der exponenzierten Logits:
+  \[
+    S = 2{,}718 + 1 + 0{,}368 = 4{,}086 .
+  \]
+  \[
+    \hat{y}_0 = \frac{2{,}718}{4{,}086} \approx 0{,}665, \quad
+    \hat{y}_1 = \frac{1}{4{,}086} \approx 0{,}245, \quad
+    \hat{y}_2 = \frac{0{,}368}{4{,}086} \approx 0{,}090 .
+  \]
+
+  \item Summe:
+  \[
+    0{,}665 + 0{,}245 + 0{,}090 = 1 .
+  \]
+  Die Softmax-Ausgabe ist also eine gültige Wahrscheinlichkeitsverteilung.
+
+  \item Die höchste Wahrscheinlichkeit liegt bei $\hat{y}_0$, das Netz sagt
+  \textbf{Klasse 0} vorher.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 6) Categorical Crossentropy mit Softmax
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Netz mit drei Klassen gibt für einen Datensatz die
+Softmax-Wahrscheinlichkeiten
+\[
+  \hat{\mathbf{y}} = (0{,}7;\; 0{,}2;\; 0{,}1)
+\]
+aus. Das wahre Label ist One-Hot-codiert. Der Loss ist
+\[
+  L(\mathbf{y}, \hat{\mathbf{y}}) = -\,\mathbf{y}\cdot\log(\hat{\mathbf{y}}) .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie $L$ für das wahre Label $\mathbf{y} = (1;\,0;\,0)$.
+  \item Berechnen Sie $L$ für das wahre Label $\mathbf{y} = (0;\,0;\,1)$.
+  \item Erklären Sie, warum bei One-Hot-Labels stets nur ein Summand übrig
+        bleibt.
+\end{enumerate}
+Hinweis: $\log(0{,}7) \approx -0{,}357$, $\log(0{,}1) \approx -2{,}303$.
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Nur die erste Komponente von $\mathbf{y}$ ist $1$:
+  \[
+    L = -\log(\hat{y}_0) = -\log(0{,}7) \approx 0{,}357 .
+  \]
+
+  \item Hier ist die dritte Komponente $1$:
+  \[
+    L = -\log(\hat{y}_2) = -\log(0{,}1) \approx 2{,}303 .
+  \]
+  Dieselbe Vorhersage ist also ein guter Treffer, wenn Klasse $0$ wahr ist,
+  aber ein schlechter, wenn Klasse $2$ wahr ist.
+
+  \item Da $\mathbf{y}$ genau eine $1$ (an der wahren Klasse) und sonst
+  Nullen enthält, verschwinden im Skalarprodukt
+  $\mathbf{y}\cdot\log(\hat{\mathbf{y}})$ alle Terme außer dem der wahren
+  Klasse. Es bleibt $L = -\log(\hat{y}_{\text{wahr}})$.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 7) Metriken bei unausgewogenen Klassen
+% -------------------------------------------------------------------
+\aufgabe{
+Ein binärer Klassifikator wurde auf $10\,000$ Testbildern ausgewertet.
+Davon sind $1\,000$ T-Shirts (Klasse positiv) und $9\,000$ Nicht-T-Shirts.
+Die Confusion Matrix ergab:
+\[
+  \begin{array}{c|c|c}
+     & \text{vorhergesagt: kein T-Shirt} & \text{vorhergesagt: T-Shirt}\\\hline
+    \text{wahr: kein T-Shirt} & 8\,820 & 180\\
+    \text{wahr: T-Shirt}      & 320    & 680
+  \end{array}
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie die Accuracy (Anteil korrekt klassifizierter Bilder).
+  \item Berechnen Sie die Fehlerrate je Klasse und daraus die
+        \textbf{Balanced Error Rate}
+        $\text{BER} = 1 - \tfrac{1}{2}(\text{Sensitivität} + \text{Spezifität})$.
+  \item Welche Accuracy erreicht das naive Modell, das \textbf{immer}
+        \glqq kein T-Shirt\grqq{} vorhersagt? Vergleichen Sie mit a).
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Korrekt sind die Diagonaleinträge:
+  \[
+    \text{Accuracy} = \frac{8\,820 + 680}{10\,000} = \frac{9\,500}{10\,000}
+    = 0{,}95 = \textbf{95\,\%} .
+  \]
+
+  \item Klassenweise Trefferraten:
+  \[
+    \text{Sensitivität (T-Shirt)} = \frac{680}{1\,000} = 0{,}68,
+  \]
+  \[
+    \text{Spezifität (kein T-Shirt)} = \frac{8\,820}{9\,000} = 0{,}98 .
+  \]
+  Balanced Error Rate:
+  \[
+    \text{BER} = 1 - \tfrac{1}{2}(0{,}68 + 0{,}98)
+    = 1 - 0{,}83 = \textbf{0{,}17} .
+  \]
+
+  \item Das naive Modell klassifiziert alle $9\,000$ Nicht-T-Shirts richtig
+  und alle $1\,000$ T-Shirts falsch:
+  \[
+    \text{Accuracy}_{\text{naiv}} = \frac{9\,000}{10\,000} = 0{,}90 .
+  \]
+  Die $95\,\%$ liegen also nur knapp über der Baseline von $90\,\%$. Bei
+  unausgewogenen Klassen ist die Accuracy irreführend, die BER (naiv $0{,}5$)
+  entlarvt den Unterschied deutlicher.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 8) Batches und Epochen
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Netz wird mit \texttt{model.fit(..., epochs=30, batch\_size=600,
+validation\_split=0.25)} trainiert. Der Trainingsdatensatz umfasst vor dem
+Split $60\,000$ Bilder.
+
+\begin{enumerate}[label=\alph*)]
+  \item Wie viele Bilder werden nach dem Validierungs-Split tatsächlich zum
+        Trainieren verwendet?
+  \item Wie viele Batches werden pro Epoche verarbeitet?
+  \item Wie viele Gewichts-Updates finden über das gesamte Training statt?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Bei $\texttt{validation\_split} = 0{,}25$ werden $25\,\%$
+  abgezweigt:
+  \[
+    60\,000\cdot(1 - 0{,}25) = 45\,000 \text{ Trainingsbilder} .
+  \]
+
+  \item Batches pro Epoche:
+  \[
+    \frac{45\,000}{600} = 75 .
+  \]
+
+  \item Ein Update pro Batch, also
+  \[
+    75\cdot 30 = \textbf{2\,250} \text{ Gewichts-Updates} .
+  \]
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 9) Momentum-Optimizer
+% -------------------------------------------------------------------
+\aufgabe{
+Der Momentum-Optimizer aktualisiert ein Gewicht nach
+\[
+  v_t = \beta\, v_{t-1} + (1-\beta)\, g_t, \qquad
+  w_{t+1} = w_t - \eta\, v_t .
+\]
+Gegeben sind $\beta = 0{,}9$, $\eta = 0{,}1$, $w_0 = 1$, $v_0 = 0$ und die
+Gradienten $g_1 = 2$, $g_2 = 2$, $g_3 = 2$ (konstante Richtung).
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie $v_1$, $v_2$, $v_3$ und die zugehörigen Gewichte.
+  \item Vergleichen Sie den Gesamtschritt $w_0 - w_3$ mit dem Ergebnis von
+        reinem SGD ($w_{t+1} = w_t - \eta\, g_t$) über drei Schritte.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Mit $\beta = 0{,}9$, also $(1-\beta) = 0{,}1$:
+  \[
+    v_1 = 0{,}9\cdot 0 + 0{,}1\cdot 2 = 0{,}2,
+    \qquad w_1 = 1 - 0{,}1\cdot 0{,}2 = 0{,}98 ,
+  \]
+  \[
+    v_2 = 0{,}9\cdot 0{,}2 + 0{,}1\cdot 2 = 0{,}38,
+    \qquad w_2 = 0{,}98 - 0{,}1\cdot 0{,}38 = 0{,}942 ,
+  \]
+  \[
+    v_3 = 0{,}9\cdot 0{,}38 + 0{,}1\cdot 2 = 0{,}542,
+    \qquad w_3 = 0{,}942 - 0{,}1\cdot 0{,}542 = 0{,}8878 .
+  \]
+
+  \item Momentum-Gesamtschritt: $w_0 - w_3 = 1 - 0{,}8878 = 0{,}1122$.
+  Reines SGD:
+  \[
+    w_3 = 1 - 3\cdot(0{,}1\cdot 2) = 1 - 0{,}6 = 0{,}4,
+    \qquad w_0 - w_3 = 0{,}6 .
+  \]
+  Momentum baut seinen Schritt erst allmählich auf (der gleitende
+  Mittelwert $v_t$ nähert sich langsam dem Gradienten $2$), während SGD
+  sofort den vollen Gradienten nutzt. Bei \textbf{konstanter} Richtung würde
+  $v_t$ über viele Schritte gegen $2$ konvergieren und Momentum dann ebenso
+  schnell wie SGD werden.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 10) Adam mit Bias-Korrektur
+% -------------------------------------------------------------------
+\aufgabe{
+Der Adam-Optimizer nutzt
+\[
+  m_t = \beta_1 m_{t-1} + (1-\beta_1)\, g_t, \qquad
+  v_t = \beta_2 v_{t-1} + (1-\beta_2)\, g_t^2,
+\]
+\[
+  \hat{m}_t = \frac{m_t}{1-\beta_1^{\,t}}, \qquad
+  \hat{v}_t = \frac{v_t}{1-\beta_2^{\,t}}, \qquad
+  w_{t+1} = w_t - \frac{\eta}{\sqrt{\hat{v}_t} + \varepsilon}\,\hat{m}_t .
+\]
+Gegeben sind $\beta_1 = 0{,}9$, $\beta_2 = 0{,}999$, $\eta = 0{,}1$,
+$\varepsilon = 0$, $m_0 = v_0 = 0$, $w_0 = 1$ und der erste Gradient
+$g_1 = 0{,}5$.
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie $m_1$ und $v_1$.
+  \item Berechnen Sie die bias-korrigierten Momente $\hat{m}_1$ und
+        $\hat{v}_1$.
+  \item Berechnen Sie das aktualisierte Gewicht $w_1$.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Erste Momente:
+  \[
+    m_1 = 0{,}9\cdot 0 + 0{,}1\cdot 0{,}5 = 0{,}05 ,
+  \]
+  \[
+    v_1 = 0{,}999\cdot 0 + 0{,}001\cdot 0{,}5^2 = 0{,}001\cdot 0{,}25
+        = 0{,}00025 .
+  \]
+
+  \item Bias-Korrektur mit $t = 1$, also $1-\beta_1^{1} = 0{,}1$ und
+  $1-\beta_2^{1} = 0{,}001$:
+  \[
+    \hat{m}_1 = \frac{0{,}05}{0{,}1} = 0{,}5,
+    \qquad
+    \hat{v}_1 = \frac{0{,}00025}{0{,}001} = 0{,}25 .
+  \]
+  Die Korrektur hebt die zum Nullpunkt hin verzerrten Momente wieder auf
+  ihre eigentliche Größenordnung.
+
+  \item Update:
+  \[
+    w_1 = 1 - \frac{0{,}1}{\sqrt{0{,}25}}\cdot 0{,}5
+        = 1 - \frac{0{,}1}{0{,}5}\cdot 0{,}5
+        = 1 - 0{,}1 = 0{,}9 .
+  \]
+  Der erste Adam-Schritt hat trotz kleinem Gradienten die volle Größe
+  $\eta$, da $\hat{m}_1$ und $\sqrt{\hat{v}_1}$ nach der Korrektur genau den
+  Gradienten $g_1$ widerspiegeln.
+\end{enumerate}
+}
+
+% ===================================================================
+% Aufgaben zu tiefen Netzen (Deep Learning)
+% Themen: Parameterzahl tiefer Netze, Overfitting-Diagnose ueber
+%         Train/Test-Abstand, Rechenaufwand der Matrixoperationen,
+%         Parallelisierung auf der GPU
+% ===================================================================
+
+% -------------------------------------------------------------------
+% 1) Parameterzahl eines tiefen Netzes
+% -------------------------------------------------------------------
+\aufgabe{
+Ein tiefes Fully-connected-Netz für Fashion-MNIST hat die Struktur
+\[
+  784 \;\rightarrow\; 512 \;\rightarrow\; 256 \;\rightarrow\; 128
+       \;\rightarrow\; 10 ,
+\]
+jede Dense-Schicht mit Bias. Für eine Schicht mit $n_{\text{in}}$ Eingängen
+und $n_{\text{out}}$ Neuronen gilt
+\[
+  \#\text{Parameter} = n_{\text{in}}\cdot n_{\text{out}} + n_{\text{out}} .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie die Parameterzahl jeder Schicht.
+  \item Geben Sie die Gesamtzahl der trainierbaren Parameter an.
+  \item Vergleichen Sie mit dem flachen Netz
+        $784 \rightarrow 300 \rightarrow 10$. Um welchen Faktor hat das
+        tiefe Netz mehr Parameter?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Schichtweise:
+  \[
+    784 \rightarrow 512: \quad 784\cdot 512 + 512 = 401\,408 + 512 = 401\,920 ,
+  \]
+  \[
+    512 \rightarrow 256: \quad 512\cdot 256 + 256 = 131\,072 + 256 = 131\,328 ,
+  \]
+  \[
+    256 \rightarrow 128: \quad 256\cdot 128 + 128 = 32\,768 + 128 = 32\,896 ,
+  \]
+  \[
+    128 \rightarrow 10: \quad 128\cdot 10 + 10 = 1\,280 + 10 = 1\,290 .
+  \]
+
+  \item Gesamt:
+  \[
+    401\,920 + 131\,328 + 32\,896 + 1\,290 = \textbf{567\,434} .
+  \]
+
+  \item Flaches Netz:
+  \[
+    (784\cdot 300 + 300) + (300\cdot 10 + 10)
+    = 235\,500 + 3\,010 = 238\,510 .
+  \]
+  Faktor:
+  \[
+    \frac{567\,434}{238\,510} \approx 2{,}38 .
+  \]
+  Das tiefe Netz hat also gut das $2{,}4$-fache an Parametern. Mehr
+  Parameter bedeuten nicht automatisch bessere Ergebnisse, wie das
+  Overfitting-Beispiel zeigt.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 2) Overfitting-Diagnose ueber den Train/Test-Abstand
+% -------------------------------------------------------------------
+\aufgabe{
+Für drei Netze wurden Trainings- und Testgenauigkeit gemessen:
+\[
+  \begin{array}{c|c|c}
+    \text{Netz} & \text{Trainings-Acc.} & \text{Test-Acc.}\\\hline
+    A \;(\text{tief}) & 0{,}982 & 0{,}838\\
+    B \;(\text{flach}) & 0{,}962 & 0{,}897\\
+    C \;(\text{zu klein}) & 0{,}612 & 0{,}605
+  \end{array}
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie für jedes Netz den Abstand
+        $\Delta = \text{Train} - \text{Test}$ in Prozentpunkten.
+  \item Ordnen Sie jedem Netz die passende Diagnose zu: \glqq Overfitting\grqq{},
+        \glqq gute Verallgemeinerung\grqq{}, \glqq mehr Daten nötig\grqq{}.
+  \item Welches Netz würden Sie einsetzen und warum?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Abstände:
+  \[
+    \Delta_A = 0{,}982 - 0{,}838 = 0{,}144 = 14{,}4 \text{ Prozentpunkte} ,
+  \]
+  \[
+    \Delta_B = 0{,}962 - 0{,}897 = 0{,}065 = 6{,}5 \text{ Prozentpunkte} ,
+  \]
+  \[
+    \Delta_C = 0{,}612 - 0{,}605 = 0{,}007 = 0{,}7 \text{ Prozentpunkte} .
+  \]
+
+  \item Diagnosen:
+  \[
+    A: \text{großer Abstand} \Rightarrow \textbf{Overfitting} ,
+  \]
+  \[
+    B: \text{kleiner Abstand, hohe Werte} \Rightarrow
+       \textbf{gute Verallgemeinerung} ,
+  \]
+  \[
+    C: \text{kleiner Abstand, beide niedrig} \Rightarrow
+       \textbf{mehr Daten nötig} .
+  \]
+
+  \item Netz $B$: Es hat die höchste Testgenauigkeit ($89{,}7\,\%$) bei
+  kleinem Abstand zur Trainingsgenauigkeit. Es verallgemeinert am besten.
+  Das tiefere Netz $A$ ist trotz höherer Trainingsgenauigkeit schlechter auf
+  den Testdaten.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 3) Rechenaufwand einer Dense-Schicht
+% -------------------------------------------------------------------
+\aufgabe{
+Die Ausgabe einer Dense-Schicht entsteht durch die Matrixmultiplikation
+$\text{input}\cdot W$ mit
+$\text{input}\in\mathbb{R}^{1\times n_{\text{in}}}$ und
+$W\in\mathbb{R}^{n_{\text{in}}\times n_{\text{out}}}$. Jeder Ausgabewert
+benötigt $n_{\text{in}}$ Multiplikationen (die Additionen und der Bias
+werden hier vernachlässigt).
+
+\begin{enumerate}[label=\alph*)]
+  \item Wie viele Multiplikationen fallen für \textbf{ein} Bild in der
+        Schicht $784 \rightarrow 512$ an?
+  \item Berechnen Sie die Multiplikationen pro Bild für alle drei
+        versteckten Schichten des tiefen Netzes
+        $784 \rightarrow 512 \rightarrow 256 \rightarrow 128 \rightarrow 10$
+        (inkl. Ausgabeschicht).
+  \item Wie viele Multiplikationen fallen an, wenn ein Batch aus $600$
+        Bildern durch das gesamte Netz läuft?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Jede der $512$ Ausgaben braucht $784$ Multiplikationen:
+  \[
+    784\cdot 512 = 401\,408 .
+  \]
+
+  \item Pro Schicht $n_{\text{in}}\cdot n_{\text{out}}$:
+  \[
+    784\cdot 512 = 401\,408 ,
+  \]
+  \[
+    512\cdot 256 = 131\,072 ,
+  \]
+  \[
+    256\cdot 128 = 32\,768 ,
+  \]
+  \[
+    128\cdot 10 = 1\,280 .
+  \]
+  Summe pro Bild:
+  \[
+    401\,408 + 131\,072 + 32\,768 + 1\,280 = 566\,528 .
+  \]
+
+  \item Für einen Batch aus $600$ Bildern:
+  \[
+    600\cdot 566\,528 = 339\,916\,800 \approx 3{,}4\cdot 10^{8}
+    \text{ Multiplikationen} .
+  \]
+  Diese Operationen sind unabhängig und lassen sich auf der GPU
+  \textbf{parallel} berechnen, was den Geschwindigkeitsvorteil erklärt.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 4) Parallelisierung: CPU gegen GPU
+% -------------------------------------------------------------------
+\aufgabe{
+Eine Matrixmultiplikation erfordere $10^{9}$ elementare Operationen. Eine
+CPU mit $8$ parallelen Recheneinheiten schafft $10^{9}$ Operationen pro
+Einheit und Sekunde. Eine GPU besitzt $4\,096$ Recheneinheiten mit
+jeweils $0{,}5\cdot 10^{9}$ Operationen pro Sekunde.
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie den Gesamtdurchsatz (Operationen pro Sekunde) von CPU
+        und GPU.
+  \item Wie lange braucht jede Hardware für die Matrixmultiplikation?
+  \item Um welchen Faktor ist die GPU schneller?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Durchsatz ist Anzahl Einheiten mal Leistung je Einheit:
+  \[
+    \text{CPU}: 8\cdot 10^{9} = 8\cdot 10^{9} \text{ Op/s} ,
+  \]
+  \[
+    \text{GPU}: 4\,096\cdot 0{,}5\cdot 10^{9} = 2\,048\cdot 10^{9}
+    = 2{,}048\cdot 10^{12} \text{ Op/s} .
+  \]
+
+  \item Zeit ist Operationen geteilt durch Durchsatz:
+  \[
+    t_{\text{CPU}} = \frac{10^{9}}{8\cdot 10^{9}} = 0{,}125 \text{ s} ,
+  \]
+  \[
+    t_{\text{GPU}} = \frac{10^{9}}{2{,}048\cdot 10^{12}}
+    \approx 4{,}88\cdot 10^{-4} \text{ s} .
+  \]
+
+  \item Beschleunigungsfaktor:
+  \[
+    \frac{t_{\text{CPU}}}{t_{\text{GPU}}}
+    = \frac{0{,}125}{4{,}88\cdot 10^{-4}} \approx 256 .
+  \]
+  Der Faktor entspricht genau dem Verhältnis der Gesamtdurchsätze
+  ($2\,048\cdot 10^{9} / (8\cdot 10^{9}) = 256$). Die GPU gewinnt durch ihre
+  hohe Parallelität, obwohl jede einzelne Einheit langsamer rechnet.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 5) Wachstum des Rechenaufwands mit der Netztiefe
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Netz habe eine Eingabe der Größe $n$ und $L$ versteckte Schichten mit
+je $n$ Neuronen (der Einfachheit halber gleich breit). Der Rechenaufwand
+einer Schicht ist $n^2$ Multiplikationen.
+
+\begin{enumerate}[label=\alph*)]
+  \item Geben Sie den Gesamtaufwand des Netzes in Abhängigkeit von $n$ und
+        $L$ an.
+  \item Berechnen Sie den Aufwand für $n = 500$ und $L = 3$ sowie für
+        $L = 6$.
+  \item Wie verändert sich der Aufwand, wenn man bei fester Tiefe $L$ die
+        Breite $n$ verdoppelt?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Jede der $L$ Schichten kostet $n^2$, also
+  \[
+    \text{Aufwand} = L\cdot n^2 .
+  \]
+
+  \item Für $n = 500$ ist $n^2 = 250\,000$:
+  \[
+    L = 3: \quad 3\cdot 250\,000 = 750\,000 ,
+  \]
+  \[
+    L = 6: \quad 6\cdot 250\,000 = 1\,500\,000 .
+  \]
+  Doppelte Tiefe bedeutet hier doppelten Aufwand (linear in $L$).
+
+  \item Verdoppelt man $n$, so wächst $n^2$ auf $(2n)^2 = 4n^2$. Der Aufwand
+  \textbf{vervierfacht} sich also. Die Breite geht \textbf{quadratisch},
+  die Tiefe nur \textbf{linear} in den Aufwand ein.
+\end{enumerate}
+}
+
+
+\subsection{CNNs}
+
+
+% ===================================================================
+% Aufgaben zu Convolutional Neural Networks (CNN)
+% Themen: Graustufenumrechnung, 2D-Faltung, Ausgabegroesse,
+%         Parameterzahl von Conv-Layern, MaxPooling,
+%         rezeptives Feld, separierbare Filter, Dropout
+% ===================================================================
+
+% -------------------------------------------------------------------
+% 1) RGB zu Graustufen
+% -------------------------------------------------------------------
+\aufgabe{
+Die Umrechnung eines RGB-Pixels in einen Graustufenwert nutzt die
+gewichtete Summe
+\[
+  I_{\text{grau}} = 0{,}299\,R + 0{,}587\,G + 0{,}114\,B .
+\]
+Berechnen Sie den Grauwert (auf ganze Zahlen gerundet) für:
+
+\begin{enumerate}[label=\alph*)]
+  \item reines Rot $(R,G,B) = (255, 0, 0)$,
+  \item reines Grün $(0, 255, 0)$,
+  \item einen Mischton $(100, 150, 200)$.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item
+  \[
+    I_{\text{grau}} = 0{,}299\cdot 255 = 76{,}2 \approx 76 .
+  \]
+
+  \item
+  \[
+    I_{\text{grau}} = 0{,}587\cdot 255 = 149{,}7 \approx 150 .
+  \]
+  Grün erscheint dem Auge deutlich heller als Rot, obwohl beide dieselbe
+  Intensität $255$ haben.
+
+  \item
+  \[
+    I_{\text{grau}} = 0{,}299\cdot 100 + 0{,}587\cdot 150 + 0{,}114\cdot 200
+  \]
+  \[
+    = 29{,}9 + 88{,}05 + 22{,}8 = 140{,}75 \approx 141 .
+  \]
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 2) 2D-Faltung mit Boxfilter (Valid)
+% -------------------------------------------------------------------
+\aufgabe{
+Gegeben sei der $4\times 4$-Bildausschnitt
+\[
+  I =
+  \begin{pmatrix}
+    2 & 4 & 6 & 8\\
+    0 & 2 & 4 & 6\\
+    8 & 6 & 4 & 2\\
+    0 & 0 & 2 & 4
+  \end{pmatrix}
+\]
+und der $3\times 3$-Mittelwertfilter
+$k = \tfrac{1}{9}\begin{pmatrix} 1&1&1\\1&1&1\\1&1&1 \end{pmatrix}$. Es wird
+mit \textbf{Stride 1} und \textbf{Valid}-Faltung (ohne Padding) gearbeitet.
+
+\begin{enumerate}[label=\alph*)]
+  \item Welche Größe hat das Ausgabebild?
+  \item Berechnen Sie alle Werte des Ausgabebildes (auf zwei Nachkommastellen).
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Ausgabegröße $W - F + 1 = 4 - 3 + 1 = 2$, also ein $2\times 2$-Bild.
+
+  \item Da der Filter symmetrisch ist, entspricht die Faltung dem Mittelwert
+  jedes $3\times 3$-Fensters. Oben links (Zeilen 1--3, Spalten 1--3):
+  \[
+    \frac{2+4+6 + 0+2+4 + 8+6+4}{9} = \frac{36}{9} = 4{,}00 .
+  \]
+  Oben rechts (Zeilen 1--3, Spalten 2--4):
+  \[
+    \frac{4+6+8 + 2+4+6 + 6+4+2}{9} = \frac{42}{9} \approx 4{,}67 .
+  \]
+  Unten links (Zeilen 2--4, Spalten 1--3):
+  \[
+    \frac{0+2+4 + 8+6+4 + 0+0+2}{9} = \frac{26}{9} \approx 2{,}89 .
+  \]
+  Unten rechts (Zeilen 2--4, Spalten 2--4):
+  \[
+    \frac{2+4+6 + 6+4+2 + 0+2+4}{9} = \frac{30}{9} \approx 3{,}33 .
+  \]
+  \[
+    O \approx
+    \begin{pmatrix} 4{,}00 & 4{,}67\\ 2{,}89 & 3{,}33 \end{pmatrix} .
+  \]
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 3) Faltung mit Sobel-Filter
+% -------------------------------------------------------------------
+\aufgabe{
+Der Sobel-Filter für horizontale Ableitungen ist
+\[
+  K_x =
+  \begin{pmatrix} -1 & 0 & 1\\ -2 & 0 & 2\\ -1 & 0 & 1 \end{pmatrix} .
+\]
+Er wird als \textbf{Kreuzkorrelation} (ohne Kernel-Spiegelung) auf den
+Bildausschnitt
+\[
+  A =
+  \begin{pmatrix} 10 & 10 & 50\\ 10 & 10 & 50\\ 10 & 10 & 50 \end{pmatrix}
+\]
+angewendet.
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie den Ausgabewert an der Fenstermitte.
+  \item Berechnen Sie denselben Wert für einen homogenen Ausschnitt, bei dem
+        alle Einträge $= 10$ sind. Was zeigt das Ergebnis?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Elementweise Multiplikation und Summe:
+  \[
+    (-1)\cdot 10 + 0\cdot 10 + 1\cdot 50
+  \]
+  \[
+    + (-2)\cdot 10 + 0\cdot 10 + 2\cdot 50
+  \]
+  \[
+    + (-1)\cdot 10 + 0\cdot 10 + 1\cdot 50 .
+  \]
+  Zeilenweise: $(-10 + 50) + (-20 + 100) + (-10 + 50) = 40 + 80 + 40 = 160$.
+  Der große positive Wert zeigt eine \textbf{senkrechte Kante} (Sprung von
+  $10$ auf $50$ nach rechts).
+
+  \item Bei konstantem Ausschnitt heben sich die positiven und negativen
+  Gewichte auf:
+  \[
+    (-1-2-1 + 1+2+1)\cdot 10 = 0 .
+  \]
+  In homogenen Regionen liefert der Sobel-Filter also $0$, passend zur
+  Gewichtssumme $0$. Er reagiert nur auf Intensitätsänderungen.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 4) Ausgabegroesse mit Padding und Stride
+% -------------------------------------------------------------------
+\aufgabe{
+Die Ausgabegröße einer Faltungsschicht ist
+\[
+  W_{\text{out}} = \left\lfloor \frac{W - F + 2P}{S} \right\rfloor + 1 ,
+\]
+mit Eingabebreite $W$, Kernelgröße $F$, Padding $P$ und Stride $S$.
+Berechnen Sie $W_{\text{out}}$ für:
+
+\begin{enumerate}[label=\alph*)]
+  \item $W = 28$, $F = 3$, $P = 0$, $S = 1$ (Valid),
+  \item $W = 28$, $F = 3$, $P = 1$, $S = 1$ (Same),
+  \item $W = 32$, $F = 5$, $P = 0$, $S = 2$,
+  \item Welches Padding $P$ ist für einen $5\times 5$-Kernel nötig, damit
+        bei $S = 1$ die Größe erhalten bleibt (Same)?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item
+  \[
+    W_{\text{out}} = \left\lfloor \frac{28 - 3 + 0}{1} \right\rfloor + 1
+    = 25 + 1 = 26 .
+  \]
+
+  \item
+  \[
+    W_{\text{out}} = \left\lfloor \frac{28 - 3 + 2}{1} \right\rfloor + 1
+    = 27 + 1 = 28 .
+  \]
+  Das Padding $P = 1$ erhält bei einem $3\times 3$-Kernel die Größe.
+
+  \item
+  \[
+    W_{\text{out}} = \left\lfloor \frac{32 - 5 + 0}{2} \right\rfloor + 1
+    = \lfloor 13{,}5 \rfloor + 1 = 13 + 1 = 14 .
+  \]
+
+  \item Für Same-Padding gilt $P = \tfrac{F-1}{2} = \tfrac{5-1}{2} = 2$.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 5) Parameterzahl einer Conv2D-Schicht
+% -------------------------------------------------------------------
+\aufgabe{
+Eine Conv2D-Schicht mit $D$ Kerneln der Größe $k\times k$ auf einem Eingang
+mit $C$ Kanälen hat
+\[
+  \#\text{Parameter} = D\cdot(k^2\cdot C + 1)
+\]
+(der Summand $+1$ ist der Bias je Kernel).
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie die Parameterzahl für $k = 3$, $C = 1$, $D = 64$
+        (erste Schicht des MNIST-CNN).
+  \item Berechnen Sie sie für $k = 3$, $C = 32$, $D = 64$ (eine tiefere
+        Schicht).
+  \item Vergleichen Sie mit einer Dense-Schicht, die dieselben $28\cdot 28$
+        Eingänge auf $64$ Neuronen abbildet. Warum sind CNNs
+        parametersparsamer?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item
+  \[
+    64\cdot(3^2\cdot 1 + 1) = 64\cdot(9 + 1) = 64\cdot 10 = 640 .
+  \]
+
+  \item
+  \[
+    64\cdot(3^2\cdot 32 + 1) = 64\cdot(288 + 1) = 64\cdot 289 = 18\,496 .
+  \]
+
+  \item Dense-Schicht $784 \rightarrow 64$:
+  \[
+    784\cdot 64 + 64 = 50\,176 + 64 = 50\,240 \text{ Parameter} .
+  \]
+  Die Conv-Schicht braucht nur $640$ Parameter, weil derselbe kleine Kernel
+  über \textbf{alle} Bildpositionen wiederverwendet wird
+  (\textbf{Gewichtsteilung}). Bei Dense hat jede Position eigene Gewichte.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 6) Parameter des einfachen MNIST-CNN
+% -------------------------------------------------------------------
+\aufgabe{
+Ein CNN für MNIST hat den Aufbau
+\[
+  \text{Input } (28,28,1) \;\rightarrow\;
+  \text{Conv2D}(64, 3\times 3) \;\rightarrow\;
+  \text{Flatten} \;\rightarrow\;
+  \text{Dense}(128) \;\rightarrow\;
+  \text{Dense}(10) .
+\]
+Die Conv-Schicht nutzt Valid-Faltung (kein Padding, Stride 1).
+
+\begin{enumerate}[label=\alph*)]
+  \item Bestimmen Sie die Ausgabeform der Conv2D-Schicht und die Anzahl der
+        Werte nach dem Flatten.
+  \item Berechnen Sie die Parameterzahl jeder Schicht.
+  \item In welcher Schicht liegen die meisten Parameter, und warum?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Conv verkleinert $28$ auf $28 - 3 + 1 = 26$, mit $64$ Filtern:
+  Ausgabeform $(26, 26, 64)$. Flatten ergibt
+  \[
+    26\cdot 26\cdot 64 = 43\,264 \text{ Werte} .
+  \]
+
+  \item Parameter:
+  \[
+    \text{Conv2D}: 64\cdot(3^2\cdot 1 + 1) = 640 ,
+  \]
+  \[
+    \text{Dense}(128): 43\,264\cdot 128 + 128 = 5\,537\,920 ,
+  \]
+  \[
+    \text{Dense}(10): 128\cdot 10 + 10 = 1\,290 .
+  \]
+  Flatten hat keine Parameter. Gesamt:
+  \[
+    640 + 5\,537\,920 + 1\,290 = 5\,539\,850 .
+  \]
+
+  \item Die erste Dense-Schicht enthält über $99\,\%$ aller Parameter. Nach
+  dem Flatten sind $43\,264$ Eingänge mit $128$ Neuronen vollverbunden. Ein
+  \textbf{Pooling} vor dem Flatten würde diese Zahl drastisch senken.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 7) MaxPooling
+% -------------------------------------------------------------------
+\aufgabe{
+MaxPooling mit Fenster $2\times 2$ und Stride $2$ wählt aus jedem Fenster den
+größten Wert. Gegeben sei die Feature Map
+\[
+  F =
+  \begin{pmatrix}
+    1 & 3 & 2 & 4\\
+    5 & 6 & 1 & 0\\
+    2 & 0 & 7 & 8\\
+    1 & 2 & 3 & 4
+  \end{pmatrix}
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie die gepoolte Ausgabe.
+  \item Um welchen Faktor sinkt die Anzahl der Werte?
+  \item Warum hat eine MaxPooling-Schicht keine trainierbaren Parameter?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Vier nicht überlappende Fenster:
+  \[
+    \max(1,3,5,6) = 6, \qquad \max(2,4,1,0) = 4,
+  \]
+  \[
+    \max(2,0,1,2) = 2, \qquad \max(7,8,3,4) = 8 .
+  \]
+  \[
+    O = \begin{pmatrix} 6 & 4\\ 2 & 8 \end{pmatrix} .
+  \]
+
+  \item Aus $4\times 4 = 16$ Werten werden $2\times 2 = 4$, also eine
+  Reduktion auf ein Viertel ($75\,\%$ weniger).
+
+  \item MaxPooling wählt nur den größten Wert aus, es gibt keine Gewichte,
+  die gelernt werden könnten. Die Operation ist fest vorgegeben.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 8) Rezeptives Feld und zwei 3x3 statt einer 5x5
+% -------------------------------------------------------------------
+\aufgabe{
+Bei $3\times 3$-Faltungen mit Stride $1$ vergrößert jede weitere Schicht das
+rezeptive Feld um $2$ Pixel je Kante (die erste Schicht hat $3\times 3$).
+
+\begin{enumerate}[label=\alph*)]
+  \item Wie groß ist das rezeptive Feld nach zwei bzw. drei gestapelten
+        $3\times 3$-Faltungen?
+  \item Vergleichen Sie die Gewichtszahl von zwei $3\times 3$-Faltungen mit
+        einer $5\times 5$-Faltung bei jeweils $C$ Ein- und Ausgabekanälen
+        (ohne Bias).
+  \item Warum ist der Stapel aus zwei $3\times 3$-Schichten trotz gleichem
+        rezeptiven Feld ausdrucksstärker?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Erste Schicht $3\times 3$, jede weitere $+2$:
+  \[
+    \text{zwei Schichten}: 5\times 5, \qquad
+    \text{drei Schichten}: 7\times 7 .
+  \]
+
+  \item Gewichte pro Schicht $k^2\cdot C^2$:
+  \[
+    \text{eine } 5\times 5: \; 25\,C^2, \qquad
+    \text{zwei } 3\times 3: \; 2\cdot 9\,C^2 = 18\,C^2 .
+  \]
+  Der Stapel spart $\tfrac{25 - 18}{25} = 28\,\%$ der Gewichte.
+
+  \item Zwischen den beiden $3\times 3$-Faltungen liegt eine
+  \textbf{ReLU}-Nichtlinearität. Ohne sie ließen sich beide Schichten zu
+  einer einzigen linearen Faltung zusammenfassen. Die zusätzliche
+  Nichtlinearität erlaubt komplexere Funktionen bei gleichem rezeptiven Feld
+  und weniger Parametern.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 9) Separierbare Filter
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Kernel heißt separierbar, wenn er sich als äußeres Produkt
+$K = k_y\,k_x^{\mathsf{T}}$ zweier Vektoren schreiben lässt. Betrachtet wird
+der Sobel-Kernel
+\[
+  K =
+  \begin{pmatrix} -1 & 0 & 1\\ -2 & 0 & 2\\ -1 & 0 & 1 \end{pmatrix},
+  \qquad
+  k_y = \begin{pmatrix} 1 \\ 2 \\ 1 \end{pmatrix},
+  \qquad
+  k_x = \begin{pmatrix} -1 \\ 0 \\ 1 \end{pmatrix} .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Bestätigen Sie durch Berechnung von $k_y\,k_x^{\mathsf{T}}$, dass
+        $K$ separierbar ist.
+  \item Ein $k\times k$-Filter kostet pro Pixel $k^2$ Multiplikationen, die
+        separierte Variante nur $2k$. Berechnen Sie beide Werte für
+        $k = 3$ und $k = 7$.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Äußeres Produkt (Spaltenvektor mal Zeilenvektor):
+  \[
+    k_y\,k_x^{\mathsf{T}} =
+    \begin{pmatrix} 1 \\ 2 \\ 1 \end{pmatrix}
+    \begin{pmatrix} -1 & 0 & 1 \end{pmatrix}
+    =
+    \begin{pmatrix}
+      -1 & 0 & 1\\
+      -2 & 0 & 2\\
+      -1 & 0 & 1
+    \end{pmatrix}
+    = K .
+  \]
+  Die Darstellung stimmt, $K$ ist separierbar.
+
+  \item Aufwand pro Pixel:
+  \[
+    k = 3: \quad k^2 = 9 \;\text{ gegen }\; 2k = 6 ,
+  \]
+  \[
+    k = 7: \quad k^2 = 49 \;\text{ gegen }\; 2k = 14 .
+  \]
+  Der Vorteil wächst mit der Kernelgröße: Bei $k = 7$ spart die separierte
+  Faltung fast drei Viertel der Multiplikationen.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 10) Dropout
+% -------------------------------------------------------------------
+\aufgabe{
+Eine Dropout-Schicht mit Rate $p$ setzt jeden Aktivierungswert mit
+Wahrscheinlichkeit $p$ auf $0$ und skaliert die überlebenden Werte im
+Training mit dem Faktor $\tfrac{1}{1-p}$ (Inverted Dropout).
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie den Skalierungsfaktor für $p = 0{,}25$ und $p = 0{,}5$.
+  \item Gegeben seien die Aktivierungen $(2{,}0;\ 4{,}0;\ 1{,}0;\ 3{,}0)$ und
+        $p = 0{,}5$. Der erste und dritte Wert fallen aus. Geben Sie den
+        Ausgabevektor an.
+  \item Zeigen Sie, dass der Erwartungswert einer Aktivierung durch die
+        Skalierung erhalten bleibt.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Faktor $\tfrac{1}{1-p}$:
+  \[
+    p = 0{,}25: \; \frac{1}{0{,}75} \approx 1{,}33, \qquad
+    p = 0{,}5: \; \frac{1}{0{,}5} = 2 .
+  \]
+
+  \item Ausgefallene Werte werden $0$, die überlebenden verdoppelt:
+  \[
+    (0;\ 8{,}0;\ 0;\ 6{,}0) .
+  \]
+
+  \item Sei $a$ eine Aktivierung. Mit Wahrscheinlichkeit $1-p$ überlebt sie
+  und wird zu $\tfrac{a}{1-p}$, mit Wahrscheinlichkeit $p$ wird sie $0$:
+  \[
+    E[\text{Ausgabe}]
+    = (1-p)\cdot\frac{a}{1-p} + p\cdot 0 = a .
+  \]
+  Der Erwartungswert entspricht also der ursprünglichen Aktivierung. Das ist
+  der Grund für die Skalierung, so bleibt das Netz im Mittel gleich stark
+  angeregt wie ohne Dropout.
+\end{enumerate}
+}

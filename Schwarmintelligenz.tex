@@ -1,0 +1,347 @@
+\section{Schwarmintelligenz}
+\setcounter{aufgabe}{0}
+
+% ===================================================================
+% Aufgaben zu Schwarmintelligenz (Partikelschwarmoptimierung)
+% Themen: Zielfunktion und Fitness, pbest/gbest, Geschwindigkeits-
+%         und Positionsupdate, Traegheitsgewicht, mehrere Iterationen
+% ===================================================================
+
+% -------------------------------------------------------------------
+% 1) Fitness, pbest und gbest
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Schwarm aus drei Partikeln minimiert die Zielfunktion
+\[
+  f : \mathbb{R} \to \mathbb{R}, \qquad f(x) = (x - 3)^2 .
+\]
+Die aktuellen Positionen und die persönlich besten Positionen sind
+\[
+  \begin{array}{c|c|c}
+    i & x_i & p_i\\\hline
+    1 & 1 & 0\\
+    2 & 5 & 6\\
+    3 & 4 & 4
+  \end{array}
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie $f(x_i)$ und $f(p_i)$ für alle Partikel.
+  \item Aktualisieren Sie das persönliche Beste $p_i$, falls die aktuelle
+        Position besser ist ($f(x_i) < f(p_i)$).
+  \item Bestimmen Sie das globale Beste $g = \arg\min_i f(p_i)$ nach dem
+        Update.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item
+  \[
+    \begin{array}{c|c|c}
+      i & f(x_i) & f(p_i)\\\hline
+      1 & (1-3)^2 = 4 & (0-3)^2 = 9\\
+      2 & (5-3)^2 = 4 & (6-3)^2 = 9\\
+      3 & (4-3)^2 = 1 & (4-3)^2 = 1
+    \end{array}
+  \]
+
+  \item Vergleich $f(x_i) < f(p_i)$:
+  \[
+    \text{Partikel } 1: 4 < 9 \Rightarrow p_1 = 1,
+  \]
+  \[
+    \text{Partikel } 2: 4 < 9 \Rightarrow p_2 = 5,
+  \]
+  \[
+    \text{Partikel } 3: 1 < 1 \text{ falsch} \Rightarrow p_3 = 4 .
+  \]
+
+  \item Neue $f(p_i)$-Werte: $f(p_1) = 4$, $f(p_2) = 4$, $f(p_3) = 1$.
+  Das Minimum liegt bei Partikel $3$:
+  \[
+    g = p_3 = 4, \qquad f(g) = 1 .
+  \]
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 2) Geschwindigkeits- und Positionsupdate (1D, ohne Traegheitsgewicht)
+% -------------------------------------------------------------------
+\aufgabe{
+Das Geschwindigkeits- und Positionsupdate eines Partikels lautet
+\[
+  v_i^{t+1} = v_i^{t}
+    + c_1 r_1 (p_i - x_i^{t})
+    + c_2 r_2 (g - x_i^{t}),
+  \qquad
+  x_i^{t+1} = x_i^{t} + v_i^{t+1} .
+\]
+Gegeben sind für ein Partikel im $\mathbb{R}$
+\[
+  x_i^{t} = 2, \quad v_i^{t} = 1, \quad p_i = 5, \quad g = 8,
+\]
+\[
+  c_1 = 2, \quad c_2 = 2, \quad r_1 = 0{,}5, \quad r_2 = 0{,}25 .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie den kognitiven Anteil $c_1 r_1 (p_i - x_i^{t})$ und den
+        sozialen Anteil $c_2 r_2 (g - x_i^{t})$.
+  \item Berechnen Sie die neue Geschwindigkeit $v_i^{t+1}$.
+  \item Berechnen Sie die neue Position $x_i^{t+1}$.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Kognitiver Anteil:
+  \[
+    c_1 r_1 (p_i - x_i^{t}) = 2\cdot 0{,}5\cdot(5 - 2) = 1\cdot 3 = 3 .
+  \]
+  Sozialer Anteil:
+  \[
+    c_2 r_2 (g - x_i^{t}) = 2\cdot 0{,}25\cdot(8 - 2) = 0{,}5\cdot 6 = 3 .
+  \]
+
+  \item Neue Geschwindigkeit (Trägheit ist der alte Wert $v_i^{t} = 1$):
+  \[
+    v_i^{t+1} = 1 + 3 + 3 = 7 .
+  \]
+
+  \item Neue Position:
+  \[
+    x_i^{t+1} = 2 + 7 = 9 .
+  \]
+  Beide Anziehungen (zum pbest $5$ und zum gbest $8$) ziehen das Partikel
+  nach rechts, es schießt sogar über beide hinaus.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 3) Geschwindigkeitsupdate mit Traegheitsgewicht
+% -------------------------------------------------------------------
+\aufgabe{
+In der erweiterten Variante wird die bisherige Geschwindigkeit mit einem
+\textbf{Trägheitsgewicht} $w$ gedämpft:
+\[
+  v_i^{t+1} = w\,v_i^{t}
+    + c_1 r_1 (p_i - x_i^{t})
+    + c_2 r_2 (g - x_i^{t}) .
+\]
+Gegeben sind
+\[
+  x_i^{t} = 0, \quad v_i^{t} = 4, \quad p_i = 2, \quad g = -1,
+\]
+\[
+  w = 0{,}5, \quad c_1 = 2, \quad c_2 = 2,
+  \quad r_1 = 1, \quad r_2 = 0{,}5 .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie $v_i^{t+1}$ und $x_i^{t+1}$.
+  \item Berechnen Sie dieselbe Aktualisierung ohne Trägheitsgewicht
+        ($w = 1$).
+  \item Erklären Sie anhand der beiden Ergebnisse die Wirkung von $w$.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Anteile:
+  \[
+    w\,v_i^{t} = 0{,}5\cdot 4 = 2,
+  \]
+  \[
+    c_1 r_1 (p_i - x_i^{t}) = 2\cdot 1\cdot(2 - 0) = 4,
+  \]
+  \[
+    c_2 r_2 (g - x_i^{t}) = 2\cdot 0{,}5\cdot(-1 - 0) = -1 .
+  \]
+  \[
+    v_i^{t+1} = 2 + 4 - 1 = 5, \qquad
+    x_i^{t+1} = 0 + 5 = 5 .
+  \]
+
+  \item Mit $w = 1$ ist der Trägheitsanteil $1\cdot 4 = 4$:
+  \[
+    v_i^{t+1} = 4 + 4 - 1 = 7, \qquad
+    x_i^{t+1} = 0 + 7 = 7 .
+  \]
+
+  \item Ein kleineres $w$ \textbf{dämpft} die bisherige Bewegung: Das
+  Partikel behält weniger Schwung und bleibt näher an den Zielpunkten
+  (Position $5$ statt $7$). Großes $w$ fördert \textbf{Exploration}, kleines
+  $w$ fördert die \textbf{Konvergenz}.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 4) PSO im R^2
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Partikel bewegt sich im $\mathbb{R}^2$ mit dem Update
+\[
+  \mathbf{v}_i^{t+1} = \mathbf{v}_i^{t}
+    + c_1 r_1 (\mathbf{p}_i - \mathbf{x}_i^{t})
+    + c_2 r_2 (\mathbf{g} - \mathbf{x}_i^{t}),
+  \qquad
+  \mathbf{x}_i^{t+1} = \mathbf{x}_i^{t} + \mathbf{v}_i^{t+1} .
+\]
+Gegeben sind
+\[
+  \mathbf{x}_i^{t} = \begin{pmatrix} 1 \\ 1 \end{pmatrix}, \quad
+  \mathbf{v}_i^{t} = \begin{pmatrix} 0 \\ 2 \end{pmatrix}, \quad
+  \mathbf{p}_i = \begin{pmatrix} 4 \\ 0 \end{pmatrix}, \quad
+  \mathbf{g} = \begin{pmatrix} 3 \\ 3 \end{pmatrix},
+\]
+\[
+  c_1 = c_2 = 2, \quad r_1 = 0{,}5, \quad r_2 = 0{,}5 .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie den kognitiven und den sozialen Anteil als Vektor.
+  \item Berechnen Sie $\mathbf{v}_i^{t+1}$ und $\mathbf{x}_i^{t+1}$.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Kognitiver Anteil ($c_1 r_1 = 1$):
+  \[
+    1\cdot\left(\begin{pmatrix} 4 \\ 0 \end{pmatrix}
+    - \begin{pmatrix} 1 \\ 1 \end{pmatrix}\right)
+    = \begin{pmatrix} 3 \\ -1 \end{pmatrix} .
+  \]
+  Sozialer Anteil ($c_2 r_2 = 1$):
+  \[
+    1\cdot\left(\begin{pmatrix} 3 \\ 3 \end{pmatrix}
+    - \begin{pmatrix} 1 \\ 1 \end{pmatrix}\right)
+    = \begin{pmatrix} 2 \\ 2 \end{pmatrix} .
+  \]
+
+  \item Neue Geschwindigkeit:
+  \[
+    \mathbf{v}_i^{t+1}
+    = \begin{pmatrix} 0 \\ 2 \end{pmatrix}
+    + \begin{pmatrix} 3 \\ -1 \end{pmatrix}
+    + \begin{pmatrix} 2 \\ 2 \end{pmatrix}
+    = \begin{pmatrix} 5 \\ 3 \end{pmatrix} .
+  \]
+  Neue Position:
+  \[
+    \mathbf{x}_i^{t+1}
+    = \begin{pmatrix} 1 \\ 1 \end{pmatrix}
+    + \begin{pmatrix} 5 \\ 3 \end{pmatrix}
+    = \begin{pmatrix} 6 \\ 4 \end{pmatrix} .
+  \]
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 5) Zwei Iterationen mit pbest/gbest-Update
+% -------------------------------------------------------------------
+\aufgabe{
+Ein einzelnes Partikel minimiert $f(x) = x^2$ im $\mathbb{R}$. Das globale
+Beste $g = -0{,}5$ ist fest vorgegeben und ändert sich nicht. Es gelte
+\[
+  x^{0} = 3, \quad v^{0} = -1, \quad p = 3,
+  \quad c_1 = c_2 = 1, \quad r_1 = r_2 = 1,
+\]
+und es wird ohne Trägheitsgewicht gerechnet
+($v^{t+1} = v^{t} + c_1 r_1(p - x^{t}) + c_2 r_2(g - x^{t})$).
+
+\begin{enumerate}[label=\alph*)]
+  \item Führen Sie Iteration 1 durch: $v^{1}$, $x^{1}$ und das Update von
+        $p$.
+  \item Führen Sie Iteration 2 durch: $v^{2}$, $x^{2}$ und das Update von
+        $p$.
+  \item Vergleichen Sie $f(x^{0})$, $f(x^{1})$ und $f(x^{2})$. Nähert sich
+        das Partikel dem Minimum $x = 0$?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Iteration 1 (mit $p = 3$, $x^{0} = 3$):
+  \[
+    v^{1} = -1 + (3 - 3) + (-0{,}5 - 3) = -1 + 0 - 3{,}5 = -4{,}5 ,
+  \]
+  \[
+    x^{1} = 3 + (-4{,}5) = -1{,}5 .
+  \]
+  Fitness $f(x^{1}) = (-1{,}5)^2 = 2{,}25 < 9 = f(p)$, also
+  $p = -1{,}5$.
+
+  \item Iteration 2 (mit $p = -1{,}5$, $x^{1} = -1{,}5$):
+  \[
+    v^{2} = -4{,}5 + (-1{,}5 - (-1{,}5)) + (-0{,}5 - (-1{,}5))
+          = -4{,}5 + 0 + 1 = -3{,}5 ,
+  \]
+  \[
+    x^{2} = -1{,}5 + (-3{,}5) = -5 .
+  \]
+  Fitness $f(x^{2}) = 25 > 2{,}25 = f(p)$, also bleibt $p = -1{,}5$.
+
+  \item Werte:
+  \[
+    f(x^{0}) = 9, \qquad f(x^{1}) = 2{,}25, \qquad f(x^{2}) = 25 .
+  \]
+  Das Partikel verbessert sich zunächst deutlich, schießt dann aber wegen
+  der großen (ungedämpften) Geschwindigkeit über das Minimum hinaus. Das
+  zeigt, warum ein \textbf{Trägheitsgewicht} $w < 1$ oder eine
+  Geschwindigkeitsbegrenzung nützlich ist.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 6) gbest ueber den ganzen Schwarm
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Schwarm aus vier Partikeln minimiert
+$f(\mathbf{x}) = x_1^2 + x_2^2$ im $\mathbb{R}^2$. Die persönlich besten
+Positionen sind
+\[
+  \mathbf{p}_1 = \begin{pmatrix} 2 \\ 0 \end{pmatrix}, \;
+  \mathbf{p}_2 = \begin{pmatrix} 1 \\ 1 \end{pmatrix}, \;
+  \mathbf{p}_3 = \begin{pmatrix} -1 \\ 2 \end{pmatrix}, \;
+  \mathbf{p}_4 = \begin{pmatrix} 0 \\ -1 \end{pmatrix} .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie $f(\mathbf{p}_i)$ für alle Partikel.
+  \item Bestimmen Sie das globale Beste $\mathbf{g} = \arg\min_i f(\mathbf{p}_i)$.
+  \item Partikel $2$ findet neu die Position
+        $\mathbf{x}_2 = (0{,}5;\; 0{,}5)^{\mathsf{T}}$. Aktualisieren Sie
+        $\mathbf{p}_2$ und prüfen Sie, ob sich $\mathbf{g}$ ändert.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item
+  \[
+    f(\mathbf{p}_1) = 4, \quad
+    f(\mathbf{p}_2) = 2, \quad
+    f(\mathbf{p}_3) = 5, \quad
+    f(\mathbf{p}_4) = 1 .
+  \]
+
+  \item Das Minimum liegt bei Partikel $4$:
+  \[
+    \mathbf{g} = \mathbf{p}_4 = \begin{pmatrix} 0 \\ -1 \end{pmatrix},
+    \qquad f(\mathbf{g}) = 1 .
+  \]
+
+  \item Neue Fitness von Partikel $2$:
+  \[
+    f(0{,}5;\; 0{,}5) = 0{,}25 + 0{,}25 = 0{,}5 < 2 = f(\mathbf{p}_2) ,
+  \]
+  also $\mathbf{p}_2 = (0{,}5;\; 0{,}5)^{\mathsf{T}}$. Da
+  $0{,}5 < 1 = f(\mathbf{g})$, wird Partikel $2$ das neue globale Beste:
+  \[
+    \mathbf{g} = \begin{pmatrix} 0{,}5 \\ 0{,}5 \end{pmatrix},
+    \qquad f(\mathbf{g}) = 0{,}5 .
+  \]
+\end{enumerate}
+}

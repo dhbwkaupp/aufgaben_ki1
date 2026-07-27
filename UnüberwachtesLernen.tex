@@ -1,0 +1,361 @@
+\section{Reinforcement Learning}
+\setcounter{aufgabe}{0}
+
+% ===================================================================
+% Aufgaben zu Reinforcement Learning
+% Themen: Return und Diskontierung, Wertefunktionen,
+%         Q-Learning (deterministisch und mit Lernrate),
+%         nicht-deterministische Umgebungen, epsilon-greedy
+% ===================================================================
+
+% -------------------------------------------------------------------
+% 1) Return und Diskontierung
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Agent durchläuft eine Episode und erhält ab Zeitpunkt $t$ die
+Belohnungen
+\[
+  r_{t+1} = 2, \quad r_{t+2} = 0, \quad r_{t+3} = 4, \quad
+  r_{t+4} = 10 ,
+\]
+danach ist die Episode beendet. Der Return ist
+\[
+  G_t = \sum_{k=0}^{\infty} \gamma^k\, r_{t+k+1} .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie $G_t$ für $\gamma = 0$.
+  \item Berechnen Sie $G_t$ für $\gamma = 0{,}5$.
+  \item Berechnen Sie $G_t$ für $\gamma = 1$ und interpretieren Sie den
+        Einfluss von $\gamma$.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Für $\gamma = 0$ gilt $\gamma^0 = 1$ und $\gamma^k = 0$ für
+  $k \geq 1$, also zählt nur die erste Belohnung:
+  \[
+    G_t = 1\cdot 2 = \textbf{2} .
+  \]
+
+  \item Für $\gamma = 0{,}5$:
+  \[
+    G_t = 2 + 0{,}5\cdot 0 + 0{,}25\cdot 4 + 0{,}125\cdot 10
+        = 2 + 0 + 1 + 1{,}25 = \textbf{4{,}25} .
+  \]
+
+  \item Für $\gamma = 1$ werden alle Belohnungen gleich gewichtet:
+  \[
+    G_t = 2 + 0 + 4 + 10 = \textbf{16} .
+  \]
+  Kleines $\gamma$ macht den Agenten \textbf{kurzsichtig} (nur die nächste
+  Belohnung zählt), großes $\gamma$ gewichtet \textbf{zukünftige}
+  Belohnungen stark. Die späte Belohnung $10$ dominiert erst bei großem
+  $\gamma$.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 2) Diskontierung unendlicher Belohnungen
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Agent erhält in \textbf{jedem} Zeitschritt konstant die Belohnung
+$r = 3$, die Episode ist unendlich lang. Der Return ist
+\[
+  G_t = \sum_{k=0}^{\infty} \gamma^k\, r , \qquad \gamma \in [0,1[ .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Bestimmen Sie $G_t$ in geschlossener Form mithilfe der
+        geometrischen Reihe.
+  \item Berechnen Sie $G_t$ für $\gamma = 0{,}9$.
+  \item Erklären Sie, warum die Summe für $\gamma = 1$ nicht mehr endlich
+        ist.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Mit der geometrischen Reihe
+  $\sum_{k=0}^{\infty}\gamma^k = \tfrac{1}{1-\gamma}$ für $|\gamma| < 1$:
+  \[
+    G_t = r\sum_{k=0}^{\infty}\gamma^k = \frac{r}{1-\gamma} .
+  \]
+
+  \item Für $\gamma = 0{,}9$:
+  \[
+    G_t = \frac{3}{1-0{,}9} = \frac{3}{0{,}1} = \textbf{30} .
+  \]
+
+  \item Für $\gamma = 1$ gilt $\gamma^k = 1$ für alle $k$, also
+  \[
+    G_t = \sum_{k=0}^{\infty} 3 = \infty .
+  \]
+  Die Reihe divergiert. Die Diskontierung mit $\gamma < 1$ sichert also die
+  \textbf{Konvergenz} des Returns bei unendlichen Episoden.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 3) Q-Learning: deterministisch (ein Update)
+% -------------------------------------------------------------------
+\aufgabe{
+In einer \textbf{deterministischen} Umgebung wird der Q-Wert nach
+\[
+  Q(s_t, a_t) = r_t + \gamma\,\max_a Q(s_{t+1}, a)
+\]
+aktualisiert. Der Agent wählt in $s_1$ die Aktion $a_1$, erhält
+$r_t = 3$ und landet in $s_2$. Dort gilt
+\[
+  Q(s_2, a_1) = 8, \qquad Q(s_2, a_2) = 12, \qquad Q(s_2, a_3) = -4 .
+\]
+Der Diskontfaktor ist $\gamma = 0{,}9$.
+
+\begin{enumerate}[label=\alph*)]
+  \item Bestimmen Sie $\max_a Q(s_2, a)$.
+  \item Berechnen Sie den neuen Wert $Q(s_1, a_1)$.
+  \item Wie ändert sich das Ergebnis für $\gamma = 0{,}5$?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Der maximale Folge-Q-Wert ist
+  \[
+    \max_a Q(s_2, a) = \max\{8, 12, -4\} = 12 .
+  \]
+
+  \item Mit $\gamma = 0{,}9$:
+  \[
+    Q(s_1, a_1) = 3 + 0{,}9\cdot 12 = 3 + 10{,}8 = \textbf{13{,}8} .
+  \]
+
+  \item Mit $\gamma = 0{,}5$:
+  \[
+    Q(s_1, a_1) = 3 + 0{,}5\cdot 12 = 3 + 6 = \textbf{9} .
+  \]
+  Der kleinere Diskontfaktor gewichtet den zukünftigen Erfolg schwächer,
+  daher fällt der Q-Wert niedriger aus.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 4) Q-Learning: Update mit Lernrate (mehrere Runden)
+% -------------------------------------------------------------------
+\aufgabe{
+In einer \textbf{nicht-deterministischen} Umgebung lautet die Update-Regel
+\[
+  Q(s_t, a_t) \leftarrow (1-\alpha)\,Q(s_t, a_t)
+    + \alpha\bigl(r_t + \gamma\,\max_a Q(s_{t+1}, a)\bigr)
+\]
+mit $\alpha = 0{,}3$ und $\gamma = 0{,}9$. Der Startwert ist
+$Q(s_1, a_1) = 0$.
+
+\begin{enumerate}[label=\alph*)]
+  \item Runde 1: Die Aktion liefert
+        $r_t + \gamma\max_a Q(s_{t+1}, a) = 20$. Berechnen Sie den neuen
+        Q-Wert.
+  \item Runde 2: Nun liefert dieselbe Aktion
+        $r_t + \gamma\max_a Q(s_{t+1}, a) = -30$ (der Agent stirbt).
+        Berechnen Sie den neuen Q-Wert.
+  \item Erklären Sie, welche Rolle die Lernrate $\alpha$ bei zufälligen
+        Ergebnissen spielt.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Runde 1:
+  \[
+    Q(s_1, a_1) = 0{,}7\cdot 0 + 0{,}3\cdot 20 = \textbf{6} .
+  \]
+
+  \item Runde 2 mit dem neuen Startwert $6$:
+  \[
+    Q(s_1, a_1) = 0{,}7\cdot 6 + 0{,}3\cdot(-30)
+                = 4{,}2 - 9 = \textbf{-4{,}8} .
+  \]
+
+  \item Die Lernrate $\alpha$ gewichtet die \textbf{aktuelle} Erfahrung
+  gegen den bisherigen Wert. Zufällige Schwankungen werden über viele
+  Episoden \textbf{geglättet}, sodass sich $Q$ dem Erwartungswert nähert.
+  Für $\alpha = 1$ würde jede Runde den alten Wert komplett überschreiben,
+  was nur in \textbf{deterministischen} Umgebungen sinnvoll ist.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 5) Q-Learning: vollstaendiger Pfad
+% -------------------------------------------------------------------
+\aufgabe{
+Betrachtet wird eine deterministische Kette von Zuständen
+$s_1 \to s_2 \to s_3 \to s_4$ (Ziel). Die Belohnungen der Übergänge sind
+\[
+  r(s_1 \to s_2) = 0, \quad
+  r(s_2 \to s_3) = 0, \quad
+  r(s_3 \to s_4) = 10 .
+\]
+Im Ziel $s_4$ gilt $Q(s_4, \cdot) = 0$. Alle Q-Werte starten bei $0$,
+$\gamma = 0{,}9$, und es wird deterministisch aktualisiert
+($Q(s,a) = r + \gamma\max_{a'} Q(s', a')$). Es gibt pro Zustand nur eine
+Aktion.
+
+\begin{enumerate}[label=\alph*)]
+  \item Aktualisieren Sie die Q-Werte in der Reihenfolge
+        $s_3, s_2, s_1$ (rückwärts). Geben Sie die Werte an.
+  \item Erklären Sie, warum eine einzige Vorwärts-Episode nicht ausreicht,
+        um alle Q-Werte auf ihren Endwert zu bringen.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Rückwärts, beginnend beim zielnahen Zustand:
+  \[
+    Q(s_3, \cdot) = 10 + 0{,}9\cdot Q(s_4, \cdot) = 10 + 0 = 10 ,
+  \]
+  \[
+    Q(s_2, \cdot) = 0 + 0{,}9\cdot Q(s_3, \cdot) = 0{,}9\cdot 10 = 9 ,
+  \]
+  \[
+    Q(s_1, \cdot) = 0 + 0{,}9\cdot Q(s_2, \cdot) = 0{,}9\cdot 9 = 8{,}1 .
+  \]
+
+  \item In einer Vorwärts-Episode ist beim Update von $s_1$ der Wert
+  $Q(s_2, \cdot)$ noch $0$, sodass $Q(s_1, \cdot)$ zunächst $0$ bleibt. Die
+  Belohnung aus dem Ziel muss sich erst \textbf{Schritt für Schritt}
+  rückwärts durch die Kette ausbreiten. Nach genügend vielen Episoden
+  konvergieren die Werte gegen $10$, $9$ und $8{,}1$.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 6) Erwartungswert des Q-Updates
+% -------------------------------------------------------------------
+\aufgabe{
+Eine Aktion $a$ im Zustand $s$ führt \textbf{zufällig} zu zwei Ergebnissen:
+mit Wahrscheinlichkeit $0{,}8$ zum Zustand $s'$ mit Reward $r = 5$ und mit
+Wahrscheinlichkeit $0{,}2$ zum Zustand $s''$ mit Reward $r = -10$. Es gelte
+\[
+  \max_a Q(s', a) = 20, \qquad \max_a Q(s'', a) = 0, \qquad \gamma = 0{,}9 .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie den Zielwert
+        $y = r + \gamma\max_a Q(\cdot, a)$ für beide Ergebnisse.
+  \item Berechnen Sie den Erwartungswert $E[y]$.
+  \item Gegen welchen Wert konvergiert $Q(s,a)$, wenn das Q-Learning über
+        viele Episoden mittelt?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Ergebnis $s'$:
+  \[
+    y_1 = 5 + 0{,}9\cdot 20 = 23 .
+  \]
+  Ergebnis $s''$:
+  \[
+    y_2 = -10 + 0{,}9\cdot 0 = -10 .
+  \]
+
+  \item Erwartungswert:
+  \[
+    E[y] = 0{,}8\cdot 23 + 0{,}2\cdot(-10) = 18{,}4 - 2 = \textbf{16{,}4} .
+  \]
+
+  \item Da die Update-Regel mit Lernrate über viele Episoden den
+  Erwartungswert approximiert, konvergiert
+  \[
+    Q(s,a) \to E[y] = 16{,}4 .
+  \]
+  Das einzelne zufällige Ergebnis wird also durch die Mittelung geglättet.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 7) epsilon-greedy
+% -------------------------------------------------------------------
+\aufgabe{
+Ein Agent nutzt die $\varepsilon$-greedy-Strategie: Mit Wahrscheinlichkeit
+$\varepsilon$ wählt er eine \textbf{gleichverteilt zufällige} Aktion, sonst
+die Aktion mit dem höchsten Q-Wert. In $s$ gibt es vier Aktionen mit
+\[
+  Q(s, a_1) = 5, \quad Q(s, a_2) = 8, \quad
+  Q(s, a_3) = 8, \quad Q(s, a_4) = 2 ,
+\]
+und $\varepsilon = 0{,}2$.
+
+\begin{enumerate}[label=\alph*)]
+  \item Welche Aktion(en) sind \textbf{greedy}?
+  \item Mit welcher Wahrscheinlichkeit wählt der Agent die Aktion $a_1$?
+        Beachten Sie, dass die zufällige Aktion auch die greedy Aktion sein
+        kann.
+  \item Der Agent bricht die Exploration ab ($\varepsilon = 0$) und es gilt
+        eine feste Tie-Breaking-Regel zugunsten des kleinsten Index. Welche
+        Aktion wird gewählt?
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Der maximale Q-Wert ist $8$, erreicht von $a_2$ und $a_3$. Beide
+  sind greedy.
+
+  \item Aktion $a_1$ ist nicht greedy, wird also nur über die Exploration
+  gewählt. Die Wahrscheinlichkeit ist
+  \[
+    P(a_1) = \varepsilon\cdot\frac{1}{4} = 0{,}2\cdot 0{,}25
+    = \textbf{0{,}05} .
+  \]
+
+  \item Bei $\varepsilon = 0$ wählt der Agent stets die greedy Aktion. Da
+  $a_2$ und $a_3$ gleichauf liegen, entscheidet die Tie-Breaking-Regel
+  zugunsten des kleinsten Index: Aktion $\mathbf{a_2}$.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 8) Greedy-Policy aus der Q-Tabelle
+% -------------------------------------------------------------------
+\aufgabe{
+Gegeben sei die folgende Q-Tabelle eines Agenten mit drei Zuständen und
+zwei Aktionen:
+\[
+  \begin{array}{c|c|c}
+     & a_{\text{links}} & a_{\text{rechts}}\\\hline
+    s_1 & 3 & 7\\
+    s_2 & 9 & 4\\
+    s_3 & 2 & 2
+  \end{array}
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Bestimmen Sie die greedy Policy $\pi(s) = \arg\max_a Q(s,a)$ für
+        jeden Zustand.
+  \item Der Agent startet in $s_1$. Aktion $a_{\text{rechts}}$ führt zu
+        $s_2$, dort $a_{\text{links}}$ zu $s_3$. Berechnen Sie den Return
+        entlang dieses greedy Pfades mit den Rewards
+        $r(s_1\to s_2) = 1$, $r(s_2\to s_3) = 5$ und $\gamma = 0{,}9$.
+\end{enumerate}
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Zeilenweise das Maximum:
+  \[
+    \pi(s_1) = a_{\text{rechts}} \;(7),\quad
+    \pi(s_2) = a_{\text{links}} \;(9),\quad
+    \pi(s_3) = a_{\text{links}} = a_{\text{rechts}} \;(2) .
+  \]
+  In $s_3$ sind beide Aktionen gleichwertig.
+
+  \item Return ab $s_1$ mit den zwei Übergängen:
+  \[
+    G = r(s_1\to s_2) + \gamma\, r(s_2\to s_3)
+      = 1 + 0{,}9\cdot 5 = 1 + 4{,}5 = \textbf{5{,}5} .
+  \]
+\end{enumerate}
+}
