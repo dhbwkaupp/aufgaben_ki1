@@ -1,361 +1,535 @@
-\section{Reinforcement Learning}
+\section{Unüberwachtes Lernen}
 \setcounter{aufgabe}{0}
 
 % ===================================================================
-% Aufgaben zu Reinforcement Learning
-% Themen: Return und Diskontierung, Wertefunktionen,
-%         Q-Learning (deterministisch und mit Lernrate),
-%         nicht-deterministische Umgebungen, epsilon-greedy
+% Aufgaben zu Unueberwachtem Lernen
+% Themen: MDS / Stress-Funktion, SMACOF / Guttman-Transformation,
+%         t-SNE (Aehnlichkeiten, Symmetrisierung, KL-Divergenz),
+%         k-Means (WCSS, Zuordnung, Update, Elbow)
 % ===================================================================
 
 % -------------------------------------------------------------------
-% 1) Return und Diskontierung
+% 1) Distanzmatrix und einfache Projektion
 % -------------------------------------------------------------------
 \aufgabe{
-Ein Agent durchläuft eine Episode und erhält ab Zeitpunkt $t$ die
-Belohnungen
+Gegeben seien vier Punkte im $\mathbb{R}^2$:
 \[
-  r_{t+1} = 2, \quad r_{t+2} = 0, \quad r_{t+3} = 4, \quad
-  r_{t+4} = 10 ,
-\]
-danach ist die Episode beendet. Der Return ist
-\[
-  G_t = \sum_{k=0}^{\infty} \gamma^k\, r_{t+k+1} .
+  \mathbf{p}_1 = \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \quad
+  \mathbf{p}_2 = \begin{pmatrix} 3 \\ 0 \end{pmatrix}, \quad
+  \mathbf{p}_3 = \begin{pmatrix} 0 \\ 4 \end{pmatrix}, \quad
+  \mathbf{p}_4 = \begin{pmatrix} 3 \\ 4 \end{pmatrix}.
 \]
 
 \begin{enumerate}[label=\alph*)]
-  \item Berechnen Sie $G_t$ für $\gamma = 0$.
-  \item Berechnen Sie $G_t$ für $\gamma = 0{,}5$.
-  \item Berechnen Sie $G_t$ für $\gamma = 1$ und interpretieren Sie den
-        Einfluss von $\gamma$.
+  \item Berechnen Sie die euklidische Distanzmatrix
+        $D = (d_{ij})$ mit $d_{ij} = \lVert \mathbf{p}_i - \mathbf{p}_j \rVert_2$.
+  \item Projizieren Sie die Punkte durch Weglassen der zweiten Koordinate
+        auf die $x_1$-Achse. Welche Distanzen werden dabei verfälscht?
+  \item Zeigen Sie an einem Paar, dass diese Projektion \textbf{nicht}
+        abstandserhaltend ist.
 \end{enumerate}
 }
 
 \loesung{
 \begin{enumerate}[label=\alph*)]
-  \item Für $\gamma = 0$ gilt $\gamma^0 = 1$ und $\gamma^k = 0$ für
-  $k \geq 1$, also zählt nur die erste Belohnung:
+  \item Die Distanzmatrix ist symmetrisch mit Nulldiagonale:
   \[
-    G_t = 1\cdot 2 = \textbf{2} .
+    D =
+    \begin{pmatrix}
+      0 & 3 & 4 & 5\\
+      3 & 0 & 5 & 4\\
+      4 & 5 & 0 & 3\\
+      5 & 4 & 3 & 0
+    \end{pmatrix}
   \]
+  Beispielrechnung:
+  $d_{14} = \sqrt{3^2 + 4^2} = 5$, $d_{23} = \sqrt{3^2+4^2} = 5$.
 
-  \item Für $\gamma = 0{,}5$:
+  \item Nach der Projektion gilt $\tilde{p}_i = (p_{i,1})$, also
   \[
-    G_t = 2 + 0{,}5\cdot 0 + 0{,}25\cdot 4 + 0{,}125\cdot 10
-        = 2 + 0 + 1 + 1{,}25 = \textbf{4{,}25} .
+    \tilde{p}_1 = 0, \quad \tilde{p}_2 = 3, \quad
+    \tilde{p}_3 = 0, \quad \tilde{p}_4 = 3.
   \]
+  Punkte, die sich nur in der zweiten Koordinate unterscheiden, fallen
+  zusammen: $\mathbf{p}_1, \mathbf{p}_3$ auf $0$ und
+  $\mathbf{p}_2, \mathbf{p}_4$ auf $3$.
 
-  \item Für $\gamma = 1$ werden alle Belohnungen gleich gewichtet:
+  \item Für das Paar $(1,3)$ gilt im Original $d_{13} = 4$, in der Projektion
+  aber
   \[
-    G_t = 2 + 0 + 4 + 10 = \textbf{16} .
+    \tilde{d}_{13} = |0 - 0| = 0 \neq 4.
   \]
-  Kleines $\gamma$ macht den Agenten \textbf{kurzsichtig} (nur die nächste
-  Belohnung zählt), großes $\gamma$ gewichtet \textbf{zukünftige}
-  Belohnungen stark. Die späte Belohnung $10$ dominiert erst bei großem
-  $\gamma$.
+  Zwei verschiedene Punkte werden also auf denselben Bildpunkt abgebildet.
+  Die Projektion ist damit nicht abstandserhaltend.
 \end{enumerate}
 }
 
 % -------------------------------------------------------------------
-% 2) Diskontierung unendlicher Belohnungen
+% 2) MDS: Stress-Funktion
 % -------------------------------------------------------------------
 \aufgabe{
-Ein Agent erhält in \textbf{jedem} Zeitschritt konstant die Belohnung
-$r = 3$, die Episode ist unendlich lang. Der Return ist
+Für drei Objekte seien die Zielabstände (Unähnlichkeiten)
 \[
-  G_t = \sum_{k=0}^{\infty} \gamma^k\, r , \qquad \gamma \in [0,1[ .
+  \delta_{12} = 2, \qquad \delta_{13} = 4, \qquad \delta_{23} = 3
+\]
+gegeben. Alle Gewichte seien $w_{ij} = 1$. Eine Konfiguration $X$ auf der
+Geraden liefert die Bildpunkte
+\[
+  x_1 = 0, \qquad x_2 = 1, \qquad x_3 = 5 .
+\]
+Der Stress ist
+\[
+  \sigma(X) = \sum_{i<j} w_{ij}\bigl(\delta_{ij} - d_{ij}(X)\bigr)^2 .
 \]
 
 \begin{enumerate}[label=\alph*)]
-  \item Bestimmen Sie $G_t$ in geschlossener Form mithilfe der
-        geometrischen Reihe.
-  \item Berechnen Sie $G_t$ für $\gamma = 0{,}9$.
-  \item Erklären Sie, warum die Summe für $\gamma = 1$ nicht mehr endlich
-        ist.
+  \item Berechnen Sie die Abstände $d_{ij}(X) = |x_i - x_j|$.
+  \item Berechnen Sie den Stress $\sigma(X)$.
+  \item Verschieben Sie $x_2$ auf $x_2 = 2$. Sinkt der Stress?
 \end{enumerate}
 }
 
 \loesung{
 \begin{enumerate}[label=\alph*)]
-  \item Mit der geometrischen Reihe
-  $\sum_{k=0}^{\infty}\gamma^k = \tfrac{1}{1-\gamma}$ für $|\gamma| < 1$:
+  \item
   \[
-    G_t = r\sum_{k=0}^{\infty}\gamma^k = \frac{r}{1-\gamma} .
+    d_{12} = |0-1| = 1, \qquad
+    d_{13} = |0-5| = 5, \qquad
+    d_{23} = |1-5| = 4 .
   \]
 
-  \item Für $\gamma = 0{,}9$:
+  \item
   \[
-    G_t = \frac{3}{1-0{,}9} = \frac{3}{0{,}1} = \textbf{30} .
+    \sigma(X) = (2-1)^2 + (4-5)^2 + (3-4)^2 = 1 + 1 + 1 = 3 .
   \]
 
-  \item Für $\gamma = 1$ gilt $\gamma^k = 1$ für alle $k$, also
+  \item Mit $x_2 = 2$:
   \[
-    G_t = \sum_{k=0}^{\infty} 3 = \infty .
+    d_{12} = 2, \qquad d_{23} = 3, \qquad d_{13} = 5 \text{ (unverändert)} .
   \]
-  Die Reihe divergiert. Die Diskontierung mit $\gamma < 1$ sichert also die
-  \textbf{Konvergenz} des Returns bei unendlichen Episoden.
+  \[
+    \sigma(X') = (2-2)^2 + (4-5)^2 + (3-3)^2 = 0 + 1 + 0 = 1 < 3 .
+  \]
+  Der Stress sinkt von $3$ auf $1$, die Konfiguration ist also besser.
 \end{enumerate}
 }
 
 % -------------------------------------------------------------------
-% 3) Q-Learning: deterministisch (ein Update)
+% 3) SMACOF: Guttman-Transformation
 % -------------------------------------------------------------------
 \aufgabe{
-In einer \textbf{deterministischen} Umgebung wird der Q-Wert nach
+Für $n = 3$ Punkte auf der Geraden seien die Zielabstände
 \[
-  Q(s_t, a_t) = r_t + \gamma\,\max_a Q(s_{t+1}, a)
+  \delta_{12} = 1, \qquad \delta_{13} = 3, \qquad \delta_{23} = 2
 \]
-aktualisiert. Der Agent wählt in $s_1$ die Aktion $a_1$, erhält
-$r_t = 3$ und landet in $s_2$. Dort gilt
+gegeben ($w_{ij} = 1$). Die aktuelle Konfiguration ist
 \[
-  Q(s_2, a_1) = 8, \qquad Q(s_2, a_2) = 12, \qquad Q(s_2, a_3) = -4 .
+  Z = (z_1, z_2, z_3)^{\mathsf{T}} = (0,\; 2,\; 3)^{\mathsf{T}} .
 \]
-Der Diskontfaktor ist $\gamma = 0{,}9$.
+Ein SMACOF-Schritt lautet
+$X^{(k+1)} = \tfrac{1}{n}\,B(Z)\,Z$ mit
+\[
+  B(Z)_{ij} =
+  \begin{cases}
+    -\dfrac{\delta_{ij}}{d_{ij}(Z)}, & i \neq j,\ d_{ij}(Z) \neq 0,\\[0.3cm]
+    -\displaystyle\sum_{l \neq i} B(Z)_{il}, & i = j.
+  \end{cases}
+\]
 
 \begin{enumerate}[label=\alph*)]
-  \item Bestimmen Sie $\max_a Q(s_2, a)$.
-  \item Berechnen Sie den neuen Wert $Q(s_1, a_1)$.
-  \item Wie ändert sich das Ergebnis für $\gamma = 0{,}5$?
+  \item Berechnen Sie die Abstände $d_{ij}(Z) = |z_i - z_j|$.
+  \item Stellen Sie die Matrix $B(Z)$ auf.
+  \item Berechnen Sie die neue Konfiguration
+        $X^{(1)} = \tfrac{1}{3}\,B(Z)\,Z$.
 \end{enumerate}
 }
 
 \loesung{
 \begin{enumerate}[label=\alph*)]
-  \item Der maximale Folge-Q-Wert ist
+  \item
   \[
-    \max_a Q(s_2, a) = \max\{8, 12, -4\} = 12 .
+    d_{12} = 2, \qquad d_{13} = 3, \qquad d_{23} = 1 .
   \]
 
-  \item Mit $\gamma = 0{,}9$:
+  \item Außerdiagonale Einträge $-\delta_{ij}/d_{ij}$:
   \[
-    Q(s_1, a_1) = 3 + 0{,}9\cdot 12 = 3 + 10{,}8 = \textbf{13{,}8} .
+    B_{12} = -\tfrac{1}{2}, \qquad
+    B_{13} = -\tfrac{3}{3} = -1, \qquad
+    B_{23} = -\tfrac{2}{1} = -2 .
+  \]
+  Diagonale als negative Zeilensumme der Außendiagonalen:
+  \[
+    B_{11} = \tfrac{1}{2} + 1 = \tfrac{3}{2}, \quad
+    B_{22} = \tfrac{1}{2} + 2 = \tfrac{5}{2}, \quad
+    B_{33} = 1 + 2 = 3 .
+  \]
+  \[
+    B(Z) =
+    \begin{pmatrix}
+      \tfrac{3}{2} & -\tfrac{1}{2} & -1\\[0.15cm]
+      -\tfrac{1}{2} & \tfrac{5}{2} & -2\\[0.15cm]
+      -1 & -2 & 3
+    \end{pmatrix}
   \]
 
-  \item Mit $\gamma = 0{,}5$:
+  \item Zunächst $B(Z)\,Z$ mit $Z = (0,2,3)^{\mathsf{T}}$:
   \[
-    Q(s_1, a_1) = 3 + 0{,}5\cdot 12 = 3 + 6 = \textbf{9} .
+    B(Z)\,Z =
+    \begin{pmatrix}
+      \tfrac{3}{2}\cdot 0 - \tfrac{1}{2}\cdot 2 - 1\cdot 3\\[0.1cm]
+      -\tfrac{1}{2}\cdot 0 + \tfrac{5}{2}\cdot 2 - 2\cdot 3\\[0.1cm]
+      -1\cdot 0 - 2\cdot 2 + 3\cdot 3
+    \end{pmatrix}
+    =
+    \begin{pmatrix} -4 \\ -1 \\ 5 \end{pmatrix}
   \]
-  Der kleinere Diskontfaktor gewichtet den zukünftigen Erfolg schwächer,
-  daher fällt der Q-Wert niedriger aus.
+  \[
+    X^{(1)} = \tfrac{1}{3}
+    \begin{pmatrix} -4 \\ -1 \\ 5 \end{pmatrix}
+    =
+    \begin{pmatrix} -1{,}\overline{3} \\ -0{,}\overline{3} \\ 1{,}\overline{6} \end{pmatrix}
+  \]
+  Die neuen Abstände sind $|x_1-x_2| = 1$, $|x_2-x_3| = 2$,
+  $|x_1-x_3| = 3$, also \textbf{exakt} die Zielabstände: Der Stress ist
+  nach einem Schritt bereits $0$.
 \end{enumerate}
 }
 
 % -------------------------------------------------------------------
-% 4) Q-Learning: Update mit Lernrate (mehrere Runden)
+% 4) t-SNE: bedingte Aehnlichkeiten im Ausgangsraum
 % -------------------------------------------------------------------
 \aufgabe{
-In einer \textbf{nicht-deterministischen} Umgebung lautet die Update-Regel
+Im Ausgangsraum wird die bedingte Ähnlichkeit über eine Normalverteilung
+um den Punkt $\mathbf{x}_i$ definiert:
 \[
-  Q(s_t, a_t) \leftarrow (1-\alpha)\,Q(s_t, a_t)
-    + \alpha\bigl(r_t + \gamma\,\max_a Q(s_{t+1}, a)\bigr)
+  p_{j|i} =
+  \frac{\exp\!\bigl(-\lVert \mathbf{x}_i - \mathbf{x}_j \rVert^2 / 2\sigma_i^2\bigr)}
+       {\sum_{k \neq i} \exp\!\bigl(-\lVert \mathbf{x}_i - \mathbf{x}_k \rVert^2 / 2\sigma_i^2\bigr)} .
 \]
-mit $\alpha = 0{,}3$ und $\gamma = 0{,}9$. Der Startwert ist
-$Q(s_1, a_1) = 0$.
+Betrachtet werde $i = 1$ mit den quadrierten Abständen
+\[
+  \lVert \mathbf{x}_1 - \mathbf{x}_2 \rVert^2 = 2, \qquad
+  \lVert \mathbf{x}_1 - \mathbf{x}_3 \rVert^2 = 8, \qquad
+  \lVert \mathbf{x}_1 - \mathbf{x}_4 \rVert^2 = 8 ,
+\]
+und der Bandbreite $\sigma_1 = 1$.
 
 \begin{enumerate}[label=\alph*)]
-  \item Runde 1: Die Aktion liefert
-        $r_t + \gamma\max_a Q(s_{t+1}, a) = 20$. Berechnen Sie den neuen
-        Q-Wert.
-  \item Runde 2: Nun liefert dieselbe Aktion
-        $r_t + \gamma\max_a Q(s_{t+1}, a) = -30$ (der Agent stirbt).
-        Berechnen Sie den neuen Q-Wert.
-  \item Erklären Sie, welche Rolle die Lernrate $\alpha$ bei zufälligen
-        Ergebnissen spielt.
+  \item Berechnen Sie die unskalierten Ähnlichkeiten
+        $\exp(-\lVert \mathbf{x}_1 - \mathbf{x}_j \rVert^2 / 2)$ für
+        $j = 2,3,4$.
+  \item Berechnen Sie $p_{2|1}$, $p_{3|1}$ und $p_{4|1}$.
+  \item Prüfen Sie, dass $\sum_{j \neq 1} p_{j|1} = 1$ gilt, und
+        interpretieren Sie das Ergebnis.
+\end{enumerate}
+Hinweis: $e^{-1} \approx 0{,}368$, $e^{-4} \approx 0{,}0183$.
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Mit $2\sigma_1^2 = 2$:
+  \[
+    s_2 = e^{-2/2} = e^{-1} \approx 0{,}368, \qquad
+    s_3 = s_4 = e^{-8/2} = e^{-4} \approx 0{,}0183 .
+  \]
+
+  \item Normierung über die Summe
+  $s_2 + s_3 + s_4 \approx 0{,}368 + 0{,}0183 + 0{,}0183 = 0{,}4046$:
+  \[
+    p_{2|1} \approx \frac{0{,}368}{0{,}4046} \approx 0{,}910,
+  \]
+  \[
+    p_{3|1} = p_{4|1} \approx \frac{0{,}0183}{0{,}4046} \approx 0{,}045 .
+  \]
+
+  \item Summe:
+  \[
+    p_{2|1} + p_{3|1} + p_{4|1} \approx 0{,}910 + 0{,}045 + 0{,}045 = 1 .
+  \]
+  Der nahe Nachbar $\mathbf{x}_2$ erhält fast die gesamte
+  Wahrscheinlichkeitsmasse, die fernen Punkte nur einen kleinen Anteil.
+  t-SNE gewichtet damit die \textbf{lokale} Nachbarschaft stark.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 5) t-SNE: Zielraum-Aehnlichkeiten und KL-Divergenz
+% -------------------------------------------------------------------
+\aufgabe{
+Im Zielraum verwendet t-SNE eine Student-t-Verteilung mit einem
+Freiheitsgrad:
+\[
+  q_{ij} =
+  \frac{\bigl(1 + \lVert \mathbf{y}_i - \mathbf{y}_j \rVert^2\bigr)^{-1}}
+       {\sum_{k \neq l}\bigl(1 + \lVert \mathbf{y}_k - \mathbf{y}_l \rVert^2\bigr)^{-1}} .
+\]
+Drei Punkte im Zielraum haben die quadrierten Abstände
+\[
+  \lVert \mathbf{y}_1 - \mathbf{y}_2 \rVert^2 = 0, \qquad
+  \lVert \mathbf{y}_1 - \mathbf{y}_3 \rVert^2 = 1, \qquad
+  \lVert \mathbf{y}_2 - \mathbf{y}_3 \rVert^2 = 3 .
+\]
+
+\begin{enumerate}[label=\alph*)]
+  \item Berechnen Sie die unnormierten Werte
+        $(1 + \lVert \mathbf{y}_i - \mathbf{y}_j \rVert^2)^{-1}$ und daraus
+        $q_{12}$, $q_{13}$, $q_{23}$.
+  \item Gegeben sei die Zielverteilung
+        $p_{12} = 0{,}6$, $p_{13} = 0{,}3$, $p_{23} = 0{,}1$. Berechnen Sie
+        die Kostenfunktion
+        \[
+          C = \sum_{i < j} p_{ij}\,\log \frac{p_{ij}}{q_{ij}} .
+        \]
+        Interpretieren Sie den größten Summanden.
+\end{enumerate}
+Hinweis: natürlicher Logarithmus, $\log(1{,}05) \approx 0{,}050$,
+$\log(0{,}70) \approx -0{,}357$.
+}
+
+\loesung{
+\begin{enumerate}[label=\alph*)]
+  \item Unnormierte Werte:
+  \[
+    t_{12} = \frac{1}{1+0} = 1, \qquad
+    t_{13} = \frac{1}{1+1} = 0{,}5, \qquad
+    t_{23} = \frac{1}{1+3} = 0{,}25 .
+  \]
+  Summe über alle Paare (jedes Paar einfach): $1 + 0{,}5 + 0{,}25 = 1{,}75$.
+  \[
+    q_{12} = \frac{1}{1{,}75} \approx 0{,}571, \quad
+    q_{13} = \frac{0{,}5}{1{,}75} \approx 0{,}286, \quad
+    q_{23} = \frac{0{,}25}{1{,}75} \approx 0{,}143 .
+  \]
+
+  \item Einsetzen:
+  \[
+    C = 0{,}6\log\frac{0{,}6}{0{,}571}
+      + 0{,}3\log\frac{0{,}3}{0{,}286}
+      + 0{,}1\log\frac{0{,}1}{0{,}143} .
+  \]
+  \[
+    C \approx 0{,}6\cdot 0{,}050 + 0{,}3\cdot 0{,}048
+      + 0{,}1\cdot(-0{,}357) \approx 0{,}030 + 0{,}014 - 0{,}036 = 0{,}008 .
+  \]
+  Der kleine Gesamtwert zeigt, dass $Q$ die Verteilung $P$ bereits gut
+  nachbildet. Der Term für das Paar $(1,2)$ trägt am stärksten positiv bei,
+  da dort $p_{12}$ am größten ist und Abweichungen bei nahen Paaren
+  besonders gewichtet werden.
+\end{enumerate}
+}
+
+% -------------------------------------------------------------------
+% 6) k-Means: Zuordnung und Update (ein Schritt)
+% -------------------------------------------------------------------
+\aufgabe{
+Gegeben seien die eindimensionalen Datenpunkte
+\[
+  x_1 = 1, \quad x_2 = 2, \quad x_3 = 4, \quad
+  x_4 = 7, \quad x_5 = 8
+\]
+sowie die Startzentren $\mu_1 = 1$ und $\mu_2 = 5$ ($K = 2$).
+
+\begin{enumerate}[label=\alph*)]
+  \item Ordnen Sie jeden Punkt dem nächstgelegenen Zentrum zu.
+  \item Aktualisieren Sie die Zentren als Mittelwert der zugeordneten
+        Punkte.
+  \item Führen Sie einen zweiten Zuordnungsschritt durch. Ändert sich die
+        Zuordnung noch?
 \end{enumerate}
 }
 
 \loesung{
 \begin{enumerate}[label=\alph*)]
-  \item Runde 1:
+  \item Abstand zu $\mu_1 = 1$ bzw. $\mu_2 = 5$:
   \[
-    Q(s_1, a_1) = 0{,}7\cdot 0 + 0{,}3\cdot 20 = \textbf{6} .
+    \begin{array}{c|c|c|c}
+      x & |x-1| & |x-5| & \text{Cluster}\\\hline
+      1 & 0 & 4 & C_1\\
+      2 & 1 & 3 & C_1\\
+      4 & 3 & 1 & C_2\\
+      7 & 6 & 2 & C_2\\
+      8 & 7 & 3 & C_2
+    \end{array}
+  \]
+  Also $C_1 = \{1, 2\}$ und $C_2 = \{4, 7, 8\}$.
+
+  \item Neue Zentren:
+  \[
+    \mu_1 = \frac{1+2}{2} = 1{,}5, \qquad
+    \mu_2 = \frac{4+7+8}{3} = \frac{19}{3} \approx 6{,}33 .
   \]
 
-  \item Runde 2 mit dem neuen Startwert $6$:
+  \item Zweite Zuordnung mit $\mu_1 = 1{,}5$, $\mu_2 \approx 6{,}33$:
   \[
-    Q(s_1, a_1) = 0{,}7\cdot 6 + 0{,}3\cdot(-30)
-                = 4{,}2 - 9 = \textbf{-4{,}8} .
+    \begin{array}{c|c|c|c}
+      x & |x-1{,}5| & |x-6{,}33| & \text{Cluster}\\\hline
+      1 & 0{,}5 & 5{,}33 & C_1\\
+      2 & 0{,}5 & 4{,}33 & C_1\\
+      4 & 2{,}5 & 2{,}33 & C_2\\
+      7 & 5{,}5 & 0{,}67 & C_2\\
+      8 & 6{,}5 & 1{,}67 & C_2
+    \end{array}
   \]
-
-  \item Die Lernrate $\alpha$ gewichtet die \textbf{aktuelle} Erfahrung
-  gegen den bisherigen Wert. Zufällige Schwankungen werden über viele
-  Episoden \textbf{geglättet}, sodass sich $Q$ dem Erwartungswert nähert.
-  Für $\alpha = 1$ würde jede Runde den alten Wert komplett überschreiben,
-  was nur in \textbf{deterministischen} Umgebungen sinnvoll ist.
+  Die Zuordnung bleibt $C_1 = \{1,2\}$, $C_2 = \{4,7,8\}$ unverändert. Das
+  Verfahren ist \textbf{konvergiert}.
 \end{enumerate}
 }
 
 % -------------------------------------------------------------------
-% 5) Q-Learning: vollstaendiger Pfad
+% 7) k-Means: WCSS und Vergleich zweier Zuordnungen
 % -------------------------------------------------------------------
 \aufgabe{
-Betrachtet wird eine deterministische Kette von Zuständen
-$s_1 \to s_2 \to s_3 \to s_4$ (Ziel). Die Belohnungen der Übergänge sind
+Für die Punkte $x_1 = 1$, $x_2 = 2$, $x_3 = 4$, $x_4 = 7$, $x_5 = 8$ ist
+die Zielfunktion
 \[
-  r(s_1 \to s_2) = 0, \quad
-  r(s_2 \to s_3) = 0, \quad
-  r(s_3 \to s_4) = 10 .
+  J = \sum_{k=1}^{K} \sum_{x \in C_k} (x - \mu_k)^2 .
 \]
-Im Ziel $s_4$ gilt $Q(s_4, \cdot) = 0$. Alle Q-Werte starten bei $0$,
-$\gamma = 0{,}9$, und es wird deterministisch aktualisiert
-($Q(s,a) = r + \gamma\max_{a'} Q(s', a')$). Es gibt pro Zustand nur eine
-Aktion.
 
 \begin{enumerate}[label=\alph*)]
-  \item Aktualisieren Sie die Q-Werte in der Reihenfolge
-        $s_3, s_2, s_1$ (rückwärts). Geben Sie die Werte an.
-  \item Erklären Sie, warum eine einzige Vorwärts-Episode nicht ausreicht,
-        um alle Q-Werte auf ihren Endwert zu bringen.
+  \item Berechnen Sie $J$ für die Zuordnung $C_1 = \{1,2\}$,
+        $C_2 = \{4,7,8\}$ mit den zugehörigen Mittelwerten.
+  \item Berechnen Sie $J$ für die alternative Zuordnung
+        $C_1 = \{1,2,4\}$, $C_2 = \{7,8\}$.
+  \item Welche Zuordnung ist im Sinne von k-Means besser?
 \end{enumerate}
 }
 
 \loesung{
 \begin{enumerate}[label=\alph*)]
-  \item Rückwärts, beginnend beim zielnahen Zustand:
+  \item Mittelwerte $\mu_1 = 1{,}5$, $\mu_2 = \tfrac{19}{3} \approx 6{,}33$:
   \[
-    Q(s_3, \cdot) = 10 + 0{,}9\cdot Q(s_4, \cdot) = 10 + 0 = 10 ,
+    J_1 = \bigl((1-1{,}5)^2 + (2-1{,}5)^2\bigr)
+        + \bigl((4-6{,}33)^2 + (7-6{,}33)^2 + (8-6{,}33)^2\bigr)
   \]
   \[
-    Q(s_2, \cdot) = 0 + 0{,}9\cdot Q(s_3, \cdot) = 0{,}9\cdot 10 = 9 ,
-  \]
-  \[
-    Q(s_1, \cdot) = 0 + 0{,}9\cdot Q(s_2, \cdot) = 0{,}9\cdot 9 = 8{,}1 .
+    J_1 = (0{,}25 + 0{,}25) + (5{,}43 + 0{,}45 + 2{,}79)
+        \approx 0{,}5 + 8{,}67 = 9{,}17 .
   \]
 
-  \item In einer Vorwärts-Episode ist beim Update von $s_1$ der Wert
-  $Q(s_2, \cdot)$ noch $0$, sodass $Q(s_1, \cdot)$ zunächst $0$ bleibt. Die
-  Belohnung aus dem Ziel muss sich erst \textbf{Schritt für Schritt}
-  rückwärts durch die Kette ausbreiten. Nach genügend vielen Episoden
-  konvergieren die Werte gegen $10$, $9$ und $8{,}1$.
+  \item Mittelwerte $\mu_1 = \tfrac{1+2+4}{3} = \tfrac{7}{3} \approx 2{,}33$,
+  $\mu_2 = 7{,}5$:
+  \[
+    J_2 = \bigl((1-2{,}33)^2 + (2-2{,}33)^2 + (4-2{,}33)^2\bigr)
+        + \bigl((7-7{,}5)^2 + (8-7{,}5)^2\bigr)
+  \]
+  \[
+    J_2 = (1{,}78 + 0{,}11 + 2{,}79) + (0{,}25 + 0{,}25)
+        \approx 4{,}67 + 0{,}5 = 5{,}17 .
+  \]
+
+  \item Wegen $J_2 \approx 5{,}17 < 9{,}17 \approx J_1$ ist die zweite
+  Zuordnung im Sinne von k-Means \textbf{besser}: Ihre Cluster sind
+  kompakter (kleinere WCSS).
 \end{enumerate}
 }
 
 % -------------------------------------------------------------------
-% 6) Erwartungswert des Q-Updates
+% 8) k-Means im R^2
 % -------------------------------------------------------------------
 \aufgabe{
-Eine Aktion $a$ im Zustand $s$ führt \textbf{zufällig} zu zwei Ergebnissen:
-mit Wahrscheinlichkeit $0{,}8$ zum Zustand $s'$ mit Reward $r = 5$ und mit
-Wahrscheinlichkeit $0{,}2$ zum Zustand $s''$ mit Reward $r = -10$. Es gelte
+Gegeben seien folgende Punkte in $\mathbb{R}^2$:
 \[
-  \max_a Q(s', a) = 20, \qquad \max_a Q(s'', a) = 0, \qquad \gamma = 0{,}9 .
+  \mathbf{x}_1 = \begin{pmatrix} 1 \\ 1 \end{pmatrix}, \;
+  \mathbf{x}_2 = \begin{pmatrix} 1 \\ 2 \end{pmatrix}, \;
+  \mathbf{x}_3 = \begin{pmatrix} 5 \\ 4 \end{pmatrix}, \;
+  \mathbf{x}_4 = \begin{pmatrix} 6 \\ 5 \end{pmatrix}, \;
+  \mathbf{x}_5 = \begin{pmatrix} 6 \\ 3 \end{pmatrix}
 \]
+mit Startzentren
+$\boldsymbol{\mu}_1 = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$ und
+$\boldsymbol{\mu}_2 = \begin{pmatrix} 5 \\ 5 \end{pmatrix}$.
 
 \begin{enumerate}[label=\alph*)]
-  \item Berechnen Sie den Zielwert
-        $y = r + \gamma\max_a Q(\cdot, a)$ für beide Ergebnisse.
-  \item Berechnen Sie den Erwartungswert $E[y]$.
-  \item Gegen welchen Wert konvergiert $Q(s,a)$, wenn das Q-Learning über
-        viele Episoden mittelt?
+  \item Ordnen Sie die Punkte anhand des \textbf{quadrierten} euklidischen
+        Abstands zu (die Wurzel ist für den Vergleich nicht nötig).
+  \item Aktualisieren Sie beide Zentren.
+  \item Berechnen Sie die resultierende WCSS $J$.
 \end{enumerate}
 }
 
 \loesung{
 \begin{enumerate}[label=\alph*)]
-  \item Ergebnis $s'$:
+  \item Quadrierte Abstände zu $\boldsymbol{\mu}_1 = (1,1)$ und
+  $\boldsymbol{\mu}_2 = (5,5)$:
   \[
-    y_1 = 5 + 0{,}9\cdot 20 = 23 .
+    \begin{array}{c|c|c|c}
+      \mathbf{x} & \lVert\cdot - \boldsymbol{\mu}_1\rVert^2
+                 & \lVert\cdot - \boldsymbol{\mu}_2\rVert^2 & \text{Cluster}\\\hline
+      (1,1) & 0 & 32 & C_1\\
+      (1,2) & 1 & 25 & C_1\\
+      (5,4) & 25 & 1 & C_2\\
+      (6,5) & 41 & 1 & C_2\\
+      (6,3) & 29 & 5 & C_2
+    \end{array}
   \]
-  Ergebnis $s''$:
+  Also $C_1 = \{\mathbf{x}_1, \mathbf{x}_2\}$,
+  $C_2 = \{\mathbf{x}_3, \mathbf{x}_4, \mathbf{x}_5\}$.
+
+  \item Neue Zentren als komponentenweiser Mittelwert:
   \[
-    y_2 = -10 + 0{,}9\cdot 0 = -10 .
+    \boldsymbol{\mu}_1 = \begin{pmatrix} 1 \\ 1{,}5 \end{pmatrix},
+    \qquad
+    \boldsymbol{\mu}_2 =
+    \begin{pmatrix} \tfrac{5+6+6}{3} \\ \tfrac{4+5+3}{3} \end{pmatrix}
+    = \begin{pmatrix} 5{,}\overline{6} \\ 4 \end{pmatrix} .
   \]
 
-  \item Erwartungswert:
+  \item WCSS mit den neuen Zentren:
   \[
-    E[y] = 0{,}8\cdot 23 + 0{,}2\cdot(-10) = 18{,}4 - 2 = \textbf{16{,}4} .
+    \text{Cluster } 1: (0 + 0{,}25) + (0 + 0{,}25) = 0{,}5
   \]
-
-  \item Da die Update-Regel mit Lernrate über viele Episoden den
-  Erwartungswert approximiert, konvergiert
   \[
-    Q(s,a) \to E[y] = 16{,}4 .
+    \text{Cluster } 2:
+    \underbrace{(0{,}\overline{4} + 0)}_{(5,4)}
+    + \underbrace{(0{,}\overline{1} + 1)}_{(6,5)}
+    + \underbrace{(0{,}\overline{1} + 1)}_{(6,3)}
+    \approx 2{,}67
   \]
-  Das einzelne zufällige Ergebnis wird also durch die Mittelung geglättet.
+  \[
+    J = 0{,}5 + 2{,}67 \approx 3{,}17 .
+  \]
 \end{enumerate}
 }
 
 % -------------------------------------------------------------------
-% 7) epsilon-greedy
+% 9) k-Means: Elbow-Methode
 % -------------------------------------------------------------------
 \aufgabe{
-Ein Agent nutzt die $\varepsilon$-greedy-Strategie: Mit Wahrscheinlichkeit
-$\varepsilon$ wählt er eine \textbf{gleichverteilt zufällige} Aktion, sonst
-die Aktion mit dem höchsten Q-Wert. In $s$ gibt es vier Aktionen mit
+Bei der Elbow-Methode trägt man die WCSS $J(k)$ gegen die Clusterzahl $k$
+auf und sucht den \textbf{Knick}. Gemessen wurden:
 \[
-  Q(s, a_1) = 5, \quad Q(s, a_2) = 8, \quad
-  Q(s, a_3) = 8, \quad Q(s, a_4) = 2 ,
-\]
-und $\varepsilon = 0{,}2$.
-
-\begin{enumerate}[label=\alph*)]
-  \item Welche Aktion(en) sind \textbf{greedy}?
-  \item Mit welcher Wahrscheinlichkeit wählt der Agent die Aktion $a_1$?
-        Beachten Sie, dass die zufällige Aktion auch die greedy Aktion sein
-        kann.
-  \item Der Agent bricht die Exploration ab ($\varepsilon = 0$) und es gilt
-        eine feste Tie-Breaking-Regel zugunsten des kleinsten Index. Welche
-        Aktion wird gewählt?
-\end{enumerate}
-}
-
-\loesung{
-\begin{enumerate}[label=\alph*)]
-  \item Der maximale Q-Wert ist $8$, erreicht von $a_2$ und $a_3$. Beide
-  sind greedy.
-
-  \item Aktion $a_1$ ist nicht greedy, wird also nur über die Exploration
-  gewählt. Die Wahrscheinlichkeit ist
-  \[
-    P(a_1) = \varepsilon\cdot\frac{1}{4} = 0{,}2\cdot 0{,}25
-    = \textbf{0{,}05} .
-  \]
-
-  \item Bei $\varepsilon = 0$ wählt der Agent stets die greedy Aktion. Da
-  $a_2$ und $a_3$ gleichauf liegen, entscheidet die Tie-Breaking-Regel
-  zugunsten des kleinsten Index: Aktion $\mathbf{a_2}$.
-\end{enumerate}
-}
-
-% -------------------------------------------------------------------
-% 8) Greedy-Policy aus der Q-Tabelle
-% -------------------------------------------------------------------
-\aufgabe{
-Gegeben sei die folgende Q-Tabelle eines Agenten mit drei Zuständen und
-zwei Aktionen:
-\[
-  \begin{array}{c|c|c}
-     & a_{\text{links}} & a_{\text{rechts}}\\\hline
-    s_1 & 3 & 7\\
-    s_2 & 9 & 4\\
-    s_3 & 2 & 2
+  \begin{array}{c|c|c|c|c|c|c}
+    k    & 1 & 2 & 3 & 4 & 5 & 6\\\hline
+    J(k) & 480 & 180 & 70 & 55 & 45 & 38
   \end{array}
 \]
 
 \begin{enumerate}[label=\alph*)]
-  \item Bestimmen Sie die greedy Policy $\pi(s) = \arg\max_a Q(s,a)$ für
-        jeden Zustand.
-  \item Der Agent startet in $s_1$. Aktion $a_{\text{rechts}}$ führt zu
-        $s_2$, dort $a_{\text{links}}$ zu $s_3$. Berechnen Sie den Return
-        entlang dieses greedy Pfades mit den Rewards
-        $r(s_1\to s_2) = 1$, $r(s_2\to s_3) = 5$ und $\gamma = 0{,}9$.
+  \item Berechnen Sie die absolute Abnahme $\Delta J(k) = J(k-1) - J(k)$
+        für $k = 2, \dots, 6$.
+  \item Bestimmen Sie den Knick (Elbow) und begründen Sie die Wahl von $k$.
+  \item Warum ist es nicht sinnvoll, einfach das kleinste $J$ zu wählen?
 \end{enumerate}
 }
 
 \loesung{
 \begin{enumerate}[label=\alph*)]
-  \item Zeilenweise das Maximum:
+  \item
   \[
-    \pi(s_1) = a_{\text{rechts}} \;(7),\quad
-    \pi(s_2) = a_{\text{links}} \;(9),\quad
-    \pi(s_3) = a_{\text{links}} = a_{\text{rechts}} \;(2) .
+    \begin{array}{c|c|c|c|c|c}
+      k & 2 & 3 & 4 & 5 & 6\\\hline
+      \Delta J(k) & 300 & 110 & 15 & 10 & 7
+    \end{array}
   \]
-  In $s_3$ sind beide Aktionen gleichwertig.
 
-  \item Return ab $s_1$ mit den zwei Übergängen:
-  \[
-    G = r(s_1\to s_2) + \gamma\, r(s_2\to s_3)
-      = 1 + 0{,}9\cdot 5 = 1 + 4{,}5 = \textbf{5{,}5} .
-  \]
+  \item Von $k=1$ auf $2$ und von $2$ auf $3$ sinkt $J$ stark
+  ($300$ bzw. $110$), danach nur noch geringfügig ($15, 10, 7$). Der Knick
+  liegt bei $k = 3$: Zusätzliche Cluster bringen kaum noch Verbesserung.
+  Man wählt daher $\mathbf{k = 3}$.
+
+  \item $J$ sinkt mit wachsendem $k$ \textbf{monoton} und wird für $k = n$
+  (jeder Punkt ein eigenes Cluster) sogar $0$. Das kleinste $J$ liefert also
+  keine sinnvolle Clusterzahl, sondern führt zu Überanpassung. Gesucht ist
+  der beste Kompromiss zwischen Kompaktheit und Anzahl der Cluster.
 \end{enumerate}
 }

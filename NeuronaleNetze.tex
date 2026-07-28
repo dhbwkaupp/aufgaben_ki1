@@ -73,64 +73,83 @@ die Ausgabe $y = g\bigl(h(\mathbf{x})\bigr)$ mit der Heaviside-Funktion
 % -------------------------------------------------------------------
 \aufgabe{
 Ein Perzeptron mit Bias-Neuron verwendet den erweiterten Eingabevektor
-$\mathbf{x} = (x_0, x_1, x_2)^{\mathsf{T}}$ mit $x_0 = 1$ und den
-Gewichtsvektor
+$\mathbf{x} = (x_0, x_1, x_2)^{\mathsf{T}}$ mit $x_0 = 1$ und das
+Startgewicht
 \[
-  \mathbf{w} = (-0{,}2;\; 0{,}5;\; -0{,}3)^{\mathsf{T}},
+  \mathbf{w}^{(0)} = (-0{,}2;\; 0{,}5;\; -0{,}3)^{\mathsf{T}},
   \qquad \eta = 0{,}2 .
 \]
-Die Ausgabe ist $\hat{y} = \text{heaviside}(\mathbf{w}\cdot\mathbf{x})$, d. h.
+Die Ausgabe ist $\hat{y} = \text{heaviside}(\mathbf{w}\cdot\mathbf{x})$, d.\,h.
 $\hat{y} = 1$ für $\mathbf{w}\cdot\mathbf{x} > 0$, sonst $\hat{y} = 0$.
 
-Führen Sie zwei Schritte der Hebbschen Lernregel
-$\Delta w_j = \eta\cdot\text{error}\cdot x_j$ durch:
+Führen Sie \textbf{zwei aufeinanderfolgende} Schritte der Hebbschen Lernregel
+$\Delta w_j = \eta\cdot\text{error}\cdot x_j$ mit $\text{error} = y - \hat{y}$ durch.
+Verwenden Sie dabei jeweils das aus dem vorherigen Schritt aktualisierte
+Gewicht als Startpunkt:
 
 \begin{enumerate}[label=\alph*)]
-  \item Beispiel $\mathbf{x} = (1, 1, 1)^{\mathsf{T}}$ mit $y = 1$.
-  \item Beispiel $\mathbf{x} = (1, 1, 0)^{\mathsf{T}}$ mit $y = 0$.
-  \item Geben Sie die resultierende Trenngerade in der Form
-        $x_2 = a\,x_1 + b$ an.
+  \item \textbf{Schritt 1:} Trainingsbeispiel $\mathbf{x} = (1, 1, 1)^{\mathsf{T}}$
+        mit Zielwert $y = 1$. Bestimmen Sie $\hat{y}$, das error sowie das
+        aktualisierte Gewicht $\mathbf{w}^{(1)}$.
+  \item \textbf{Schritt 2:} Trainingsbeispiel $\mathbf{x} = (1, 1, 0)^{\mathsf{T}}$
+        mit Zielwert $y = 0$, ausgehend von $\mathbf{w}^{(1)}$. Bestimmen Sie
+        $\hat{y}$, das error sowie das aktualisierte Gewicht $\mathbf{w}^{(2)}$.
+  \item Geben Sie die resultierende Trenngerade auf Basis von $\mathbf{w}^{(2)}$
+        in der Form $x_2 = a\,x_1 + b$ an.
 \end{enumerate}
 }
 
 \loesung{
 \begin{enumerate}[label=\alph*)]
-  \item Netzeingabe:
+  \item \textbf{Schritt 1} mit $\mathbf{x} = (1,1,1)^{\mathsf{T}}$, $y = 1$,
+  Startgewicht $\mathbf{w}^{(0)} = (-0{,}2;\,0{,}5;\,-0{,}3)^{\mathsf{T}}$:
   \[
-    \mathbf{w}\cdot\mathbf{x} = -0{,}2 + 0{,}5 - 0{,}3 = 0
-    \;\Rightarrow\; \hat{y} = 0, \qquad \text{error} = 1 - 0 = 1 .
+    \mathbf{w}^{(0)}\cdot\mathbf{x} = -0{,}2 + 0{,}5 - 0{,}3 = 0
+    \;\Rightarrow\; \hat{y} = 0, \qquad
+    \text{error} = y - \hat{y} = 1 - 0 = 1 .
   \]
-  Gewichtsänderungen:
+  Gewichtsänderung je Komponente:
   \[
-    \Delta w_j = 0{,}2\cdot 1\cdot x_j = 0{,}2
-    \quad\text{für } j = 0,1,2
+    \Delta w_j = \eta\cdot\text{error}\cdot x_j = 0{,}2\cdot 1\cdot x_j
+    \;\Rightarrow\;
+    \Delta w_0 = 0{,}2,\; \Delta w_1 = 0{,}2,\; \Delta w_2 = 0{,}2 .
   \]
+  Neues Gewicht:
   \[
-    \mathbf{w} = (0;\; 0{,}7;\; -0{,}1)^{\mathsf{T}}
-  \]
-
-  \item Netzeingabe:
-  \[
-    \mathbf{w}\cdot\mathbf{x} = 0 + 0{,}7 + 0 = 0{,}7 > 0
-    \;\Rightarrow\; \hat{y} = 1, \qquad \text{error} = 0 - 1 = -1 .
-  \]
-  Gewichtsänderungen:
-  \[
-    \Delta w_0 = -0{,}2,\quad \Delta w_1 = -0{,}2,\quad \Delta w_2 = 0
-  \]
-  \[
-    \mathbf{w} = (-0{,}2;\; 0{,}5;\; -0{,}1)^{\mathsf{T}}
+    \mathbf{w}^{(1)} = \mathbf{w}^{(0)} + \Delta\mathbf{w}
+    = (0;\; 0{,}7;\; -0{,}1)^{\mathsf{T}} .
   \]
 
-  \item Aus $-0{,}2 + 0{,}5x_1 - 0{,}1x_2 = 0$ folgt nach Multiplikation
-  mit $10$:
+  \item \textbf{Schritt 2} mit $\mathbf{x} = (1,1,0)^{\mathsf{T}}$, $y = 0$,
+  Startgewicht $\mathbf{w}^{(1)} = (0;\,0{,}7;\,-0{,}1)^{\mathsf{T}}$
+  (Ergebnis aus Schritt 1):
   \[
+    \mathbf{w}^{(1)}\cdot\mathbf{x} = 0 + 0{,}7 + 0 = 0{,}7 > 0
+    \;\Rightarrow\; \hat{y} = 1, \qquad
+    \text{error} = y - \hat{y} = 0 - 1 = -1 .
+  \]
+  Gewichtsänderung je Komponente:
+  \[
+    \Delta w_j = 0{,}2\cdot(-1)\cdot x_j
+    \;\Rightarrow\;
+    \Delta w_0 = -0{,}2,\; \Delta w_1 = -0{,}2,\; \Delta w_2 = 0 .
+  \]
+  Neues Gewicht:
+  \[
+    \mathbf{w}^{(2)} = \mathbf{w}^{(1)} + \Delta\mathbf{w}
+    = (-0{,}2;\; 0{,}5;\; -0{,}1)^{\mathsf{T}} .
+  \]
+
+  \item Trenngerade aus $\mathbf{w}^{(2)}$:
+  \[
+    -0{,}2 + 0{,}5x_1 - 0{,}1x_2 = 0
+    \quad\xrightarrow{\cdot\,10}\quad
     5x_1 - x_2 - 2 = 0
     \quad\Longleftrightarrow\quad
     x_2 = 5x_1 - 2 .
   \]
 \end{enumerate}
-}
+}   
 
 % -------------------------------------------------------------------
 % 3) Boolesche Funktionen mit einem Perzeptron
